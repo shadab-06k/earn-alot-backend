@@ -139,67 +139,6 @@ dotenv.config();
 //   }
 // };
 
-// export const login = async (req: Request, res: Response) => {
-//   try {
-//     const { telegramId, walletAddress, userName } = req.body;
-
-//     if (!telegramId || !walletAddress || !userName) {
-//       return res.status(400).json({
-//         error: "telegramId, walletAddress and userName are required.",
-//       });
-//     }
-
-//     const tgId = String(telegramId).trim();
-//     const wallet = String(walletAddress).trim();
-//     const name = String(userName).trim();
-
-//     const client = await getClient();
-//     const db = client.db(process.env.DB_NAME);
-//     const Users = getUserCollection(db);
-
-//     let user = await Users.findOne({ walletAddress: wallet });
-
-//     if (!user) {
-//       const now = new Date();
-//       const newUser: UserDoc = {
-//         uniqueID: randomUUID(),
-//         userName: name,
-//         walletAddress: wallet,
-//         telegramId: tgId,
-//         createdAt: now,
-//         updatedAt: now,
-//       };
-//       const ins = await Users.insertOne(newUser);
-//       user = { ...newUser, _id: ins.insertedId };
-//     } else {
-//       await Users.updateOne(
-//         { _id: user._id },
-//         { $set: { updatedAt: new Date() } }
-//       );
-//     }
-
-//     // Token with exactly 4 claims
-//     const token = jwt.sign(
-//       {
-//         telegramId: user.telegramId,
-//         userName: user.userName,
-//         uniqueID: user.uniqueID,
-//         walletAddress: user.walletAddress,
-//       },
-//       process.env.JWT_SECRET as string,
-//       { expiresIn: "1h" }
-//     );
-
-//     return res.status(200).json({
-//       message: "Login successful",
-//       AuthToken: token,
-//     });
-//   } catch (error) {
-//     logger.error("Error in /login", { error });
-//     return res.status(500).json({ error: "Internal Server Error" });
-//   }
-// };
-
 export const login = async (req: Request, res: Response) => {
   try {
     const { telegramId, walletAddress, userName } = req.body;
@@ -218,35 +157,8 @@ export const login = async (req: Request, res: Response) => {
     const db = client.db(process.env.DB_NAME);
     const Users = getUserCollection(db);
 
-    // Look up by both keys
-    const [uByWallet, uByTelegram] = await Promise.all([
-      Users.findOne({ walletAddress: wallet }),
-      Users.findOne({ telegramId: tgId }),
-    ]);
+    let user = await Users.findOne({ walletAddress: wallet });
 
-    // If both exist but are different users -> conflict
-    if (uByWallet && uByTelegram && String(uByWallet._id) !== String(uByTelegram._id)) {
-      return res.status(409).json({
-        error: "Conflict: this wallet address and Telegram ID belong to different users.",
-      });
-    }
-
-    // If wallet is taken by another Telegram ID
-    if (uByWallet && uByWallet.telegramId !== tgId) {
-      return res.status(409).json({
-        error: "Wallet address is already in use by another Telegram ID.",
-      });
-    }
-
-    // If Telegram ID is taken by another wallet
-    if (uByTelegram && uByTelegram.walletAddress !== wallet) {
-      return res.status(409).json({
-        error: "Telegram ID is already in use by another wallet address.",
-      });
-    }
-
-    // Reuse existing user (by wallet or telegram), else create
-    let user = uByWallet || uByTelegram;
     if (!user) {
       const now = new Date();
       const newUser: UserDoc = {
@@ -260,7 +172,10 @@ export const login = async (req: Request, res: Response) => {
       const ins = await Users.insertOne(newUser);
       user = { ...newUser, _id: ins.insertedId };
     } else {
-      await Users.updateOne({ _id: user._id }, { $set: { updatedAt: new Date() } });
+      await Users.updateOne(
+        { _id: user._id },
+        { $set: { updatedAt: new Date() } }
+      );
     }
 
     // Token with exactly 4 claims
@@ -279,17 +194,7 @@ export const login = async (req: Request, res: Response) => {
       message: "Login successful",
       AuthToken: token,
     });
-  } catch (error: any) {
-    // Handle unique index races cleanly
-    if (error?.code === 11000) {
-      if (error.keyPattern?.walletAddress) {
-        return res.status(409).json({ error: "Wallet address already exists." });
-      }
-      if (error.keyPattern?.telegramId) {
-        return res.status(409).json({ error: "Telegram ID already exists." });
-      }
-      return res.status(409).json({ error: "Duplicate key error." });
-    }
+  } catch (error) {
     logger.error("Error in /login", { error });
     return res.status(500).json({ error: "Internal Server Error" });
   }
