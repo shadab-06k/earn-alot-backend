@@ -8,6 +8,7 @@ import {
   TicketDoc,
   UserDoc,
 } from "../models/userModel"; // adjust path if needed
+import { getPoolCollection } from "../models/poolModel";
 import { getClient } from "../connections/connections";
 import type { WithId } from "mongodb";
 import { randomUUID } from "crypto";
@@ -17,7 +18,6 @@ interface AuthPayload {
   uniqueID: string;
   walletAddress: string;
   iat?: number;
-  exp?: number;
 }
 
 dotenv.config();
@@ -187,7 +187,7 @@ export const login = async (req: Request, res: Response) => {
         walletAddress: user.walletAddress,
       },
       process.env.JWT_SECRET as string,
-      { expiresIn: "1h" }
+      // { expiresIn: "1h" }
     );
 
     return res.status(200).json({
@@ -207,25 +207,39 @@ export const buyTicket = async (req: Request, res: Response) => {
     // derive user from JWT
     // const authed = req.user;
     const authed = (req as any).user as AuthPayload | undefined;
+    console.log("authed", authed);
     if (!authed) return res.status(401).json({ error: "Unauthorized" });
 
     const {
+      contractAddress,
+      transactionHash,
+      walletAddress,
+      telegramId,
+      userName,
       lotteryNumbers,
+      poolId,
       lotteriesPurchased,
       maxBetAmount,
-      jackpot,
+      // jackpot,
       duration,
       endsIn,
       poolAmount,
+      title,
       date,
       // optional: poolId, idempotencyKey
     } = req.body;
 
     const missing = [
+      ["contractAddress", contractAddress],
+      ["transactionHash", transactionHash],
+      ["walletAddress", walletAddress],
+      ["telegramId", telegramId],
+      ["userName", userName],
       ["lotteryNumbers", lotteryNumbers],
       ["lotteriesPurchased", lotteriesPurchased],
       ["maxBetAmount", maxBetAmount],
-      ["jackpot", jackpot],
+      ["poolId", poolId],
+      // ["jackpot", jackpot],
       ["duration", duration],
       ["endsIn", endsIn],
       ["poolAmount", poolAmount],
@@ -251,6 +265,7 @@ export const buyTicket = async (req: Request, res: Response) => {
 
     const ticket: TicketDoc = {
       ticketId: randomUUID(),
+      contractAddress:contractAddress,
       userId: authed.uniqueID,
       walletAddress: authed.walletAddress,
       userName: authed.userName,
@@ -259,23 +274,102 @@ export const buyTicket = async (req: Request, res: Response) => {
       ? lotteryNumbers
       : [lotteryNumbers],
       maxBetAmount: Number(maxBetAmount) || 0,
-      jackpot: jackpot ?? "10000",
+      poolId:poolId,
+      // jackpot: jackpot ?? "10000",
       duration: String(duration),
       endsIn: String(endsIn),
       lotteriesPurchased:lotteriesPurchased|| 0,
       poolAmount: Number(poolAmount) || 0,
+      title: title || "No Title", 
+      transactionHash:transactionHash,
       date: String(date),
       purchasedAt: new Date(),
     };
 
+    // Get pool info first to check remaining tickets
+    const Pools = getPoolCollection(db);
+    const pool = await Pools.findOne({ poolId: poolId });
+    
+    if (!pool) {
+      return res.status(404).json({ error: "Pool not found" });
+    }
+
+    // Count current tickets for this pool (sum of lotteriesPurchased)
+    const ticketRecords = await Tickets.find({ poolId: poolId }).toArray();
+    const ticketsInPool = ticketRecords.reduce((sum, ticket) => sum + (ticket.lotteriesPurchased || 0), 0);
+    const remainingTickets = pool.maxTicket - ticketsInPool;
+    
+    // Check if there are enough tickets remaining
+    const ticketsToPurchase = Number(lotteriesPurchased) || 1;
+    if (remainingTickets < ticketsToPurchase) {
+      return res.status(400).json({ 
+        error: `Not enough tickets available. Remaining: ${remainingTickets}, Requested: ${ticketsToPurchase}`,
+        remainingTickets: remainingTickets,
+        requestedTickets: ticketsToPurchase,
+        isPoolFull: remainingTickets === 0
+      });
+    }
+
     const ins = await Tickets.insertOne(ticket);
+
+    // Recalculate after insertion
+    const updatedTicketRecords = await Tickets.find({ poolId: poolId }).toArray();
+    const updatedTicketsInPool = updatedTicketRecords.reduce((sum, ticket) => sum + (ticket.lotteriesPurchased || 0), 0);
+    const updatedRemainingTickets = pool.maxTicket - updatedTicketsInPool;
 
     return res.status(200).json({
       message: "Ticket purchased successfully",
       ticket: { ...ticket, _id: ins.insertedId },
+      poolInfo: {
+        poolId: poolId,
+        ticketsPurchased: updatedTicketsInPool,
+        remainingTickets: updatedRemainingTickets,
+        maxTickets: pool.maxTicket,
+        isPoolFull: updatedRemainingTickets === 0
+      }
     });
   } catch (error) {
-    logger.error("Error in /buy-ticket", { error });
+    logger.error("Error in buy-ticket", { error });
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+// GET /pool/:poolId/tickets  (Get ticket count for a pool)
+export const getPoolTickets = async (req: Request, res: Response) => {
+  try {
+    const { poolId } = req.params;
+
+    if (!poolId) {
+      return res.status(400).json({ error: "Pool ID is required" });
+    }
+
+    const client = await getClient();
+    const db = client.db(process.env.DB_NAME);
+    const Tickets = getTicketCollection(db);
+    const Pools = getPoolCollection(db);
+
+    // Get pool info
+    const pool = await Pools.findOne({ poolId: poolId });
+    if (!pool) {
+      return res.status(404).json({ error: "Pool not found" });
+    }
+
+    // Count tickets for this pool
+    const ticketRecords = await Tickets.find({ poolId: poolId }).toArray();
+    const ticketsPurchased = ticketRecords.reduce((sum, ticket) => sum + (ticket.lotteriesPurchased || 0), 0);
+    const remainingTickets = pool.maxTicket - ticketsPurchased;
+
+    return res.status(200).json({
+      poolId: poolId,
+      maxTickets: pool.maxTicket,
+      ticketsPurchased: ticketsPurchased,
+      remainingTickets: remainingTickets,
+      poolStatus: pool.status,
+      isFull: remainingTickets <= 0
+    });
+
+  } catch (error) {
+    logger.error("Error getting pool tickets", { error });
     return res.status(500).json({ error: "Internal Server Error" });
   }
 };
@@ -311,20 +405,20 @@ export const getMyTickets = async (req: Request, res: Response) => {
   }
 };
 
-// const getAllUsers = async (req: Request, res: Response) => {
-//   try {
-//     const client = await getClient();
-//     const db = client.db(process.env.DB_NAME);
-//     const userCollection = getUserCollection(db);
-//     const users = await userCollection.find({}).toArray();
-//     res
-//       .status(200)
-//       .json({ message: "All Users fetched Sucessfully", data: users });
-//   } catch (error) {
-//     logger.error("Error in getAllUsers API", { error });
-//     res.status(500).json({ message: "Internal Server Error" });
-//   }
-// };
+const getAllUsers = async (req: Request, res: Response) => {
+  try {
+    const client = await getClient();
+    const db = client.db(process.env.DB_NAME);
+    const userCollection = getUserCollection(db);
+    const users = await userCollection.find({}).toArray();
+    res
+      .status(200)
+      .json({ message: "All Users fetched Sucessfully", data: users });
+  } catch (error) {
+    logger.error("Error in getAllUsers API", { error });
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
 
 // export const getUniqueUser = async (req: Request, res: Response) => {
 //   try {
@@ -353,4 +447,4 @@ export const getMyTickets = async (req: Request, res: Response) => {
 //   }
 // };
 
-export default { login, buyTicket,getMyTickets };
+export default { login, buyTicket, getMyTickets, getPoolTickets, getAllUsers };

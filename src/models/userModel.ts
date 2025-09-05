@@ -114,13 +114,17 @@ export interface TicketDoc {
   walletAddress: string;      // from JWT
   userName: string;           // from JWT
   telegramId: string;         // from JWT
+  contractAddress: string;
+  poolId: string;
   lotteryNumbers: (number | string)[];
   maxBetAmount: number;
-  jackpot: string | number;
+  // jackpot: string | number;
   duration: string;
   endsIn: string;
   poolAmount: number;
+  title: string;
   lotteriesPurchased:number,
+  transactionHash:string,
   date: string;               // keep your format, or change to ISO string
   purchasedAt: Date;
   // optional: poolId?: string; idempotencyKey?: string;

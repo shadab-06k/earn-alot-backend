@@ -2,7 +2,9 @@ require("dotenv").config();
 var cors = require("cors");
 const express = require("express");
 import logger from "./common/logger";
-import routes from './routes/userRoutes'
+import userRoutes from './routes/userRoutes'
+import poolRoutes from './routes/poolRoutes'
+import lotteryRoutes from './routes/lottery'
 import { getClient } from "./connections/connections";
 import morgan from 'morgan';
 import commonMiddleware from './middleware/commonmiddleware';
@@ -23,7 +25,11 @@ app.use(morgan('combined', {
 }));
 
 //User Routes
-app.use('/api', routes);
+app.use('/api/users', userRoutes);
+app.use("/api/lottery", lotteryRoutes);
+
+//Pool Routes
+app.use('/api/pools', poolRoutes);
 
 // Available Routes
 app.get("/", (req: any, res: any, next: any) => {

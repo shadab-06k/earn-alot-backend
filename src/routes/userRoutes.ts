@@ -13,7 +13,8 @@ router.get("/health", (req, res) => {
 
 router.post("/login", controller.login);
 router.post("/buy-ticket", authMiddleware, controller.buyTicket);
-router.get("/unique/user", authMiddleware, controller.getMyTickets);
+router.get("/user-tickets", authMiddleware, controller.getMyTickets);
+router.get("/get-all-users", controller.getAllUsers);
 // router.get("/users", controller.getAllUsers);
 
 export default router;

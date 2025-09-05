@@ -1,0 +1,2043 @@
+// automatically generated from `@stdlib/std/stdlib.fc` `C:/Shadab Projects/earn-alot-backend/build/LotteryDraw_LotteryDraw.fc` 
+PROGRAM{
+  DECLPROC __tact_store_address_opt
+  DECLPROC __tact_context_get
+  DECLPROC __tact_context_get_sender
+  DECLPROC __tact_prepare_random
+  DECLPROC __tact_dict_get_int_int
+  DECLPROC __tact_dict_set_int_int
+  DECLPROC __tact_dict_get_int_cell
+  DECLPROC __tact_dict_set_int_cell
+  DECLPROC $DeployOk$_store
+  DECLPROC $DeployOk$_store_cell
+  DECLPROC $Ticket_Owner$_store
+  DECLPROC $Ticket_Owner$_store_cell
+  DECLPROC $Ticket_Owner$_load
+  DECLPROC $Ticket_Owner$_as_optional
+  DECLPROC $Ticket_Owner$_load_opt
+  DECLPROC $LotteryDraw$_store
+  DECLPROC $LotteryDraw$_load
+  DECLPROC $Context$_get_value
+  DECLPROC $Ticket_Owner$_get_reward
+  DECLPROC $Ticket_Owner$_get_hasClaimed
+  DECLPROC $Ticket_Owner$_not_null
+  DECLPROC $Ticket_Owner$_to_tuple
+  DECLPROC $Ticket_Owner$_to_opt_tuple
+  DECLPROC $Ticket_Owner$_to_opt_external
+  DECLPROC $LotteryDraw$init$_load
+  DECLPROC $LotteryDraw$_contract_init
+  DECLPROC $LotteryDraw$_contract_load
+  DECLPROC $LotteryDraw$_contract_store
+  DECLPROC $global_random
+  DECLPROC $global_pow
+  DECLPROC $Cell$_fun_asSlice
+  DECLPROC $SendParameters$_constructor_to_value_body
+  DECLPROC $LotteryDraw$_fun_random_uint
+  DECLPROC $LotteryDraw$_fun_get_decay_weight
+  DECLPROC $LotteryDraw$_fun_get_participant_count
+  DECLPROC $LotteryDraw$_fun_get_total_Pool
+  DECLPROC $LotteryDraw$_fun_get_Ticket_Data
+  DECLPROC $LotteryDraw$_fun_get_Ticket_TotalData
+  DECLPROC $LotteryDraw$_fun_get_Ticket_map
+  DECLPROC $LotteryDraw$_fun_get_BonusCount
+  DECLPROC $LotteryDraw$_fun_get_prize
+  DECLPROC $LotteryDraw$_fun_get_MinPrize
+  DECLPROC $LotteryDraw$_fun_get_Bid
+  DECLPROC $MessageParameters$_constructor_bounce_to_value_mode_body
+  DECLPROC $LotteryDraw$_fun_notify
+  DECLPROC $Ticket_Owner$_constructor_participent_reward_hasClaimed
+  DECLPROC $SendParameters$_constructor_to_value_mode
+  DECLPROC $DeployOk$_constructor_queryId
+  99179 DECLMETHOD %random_uint
+  75340 DECLMETHOD %get_decay_weight
+  76968 DECLMETHOD %get_participant_count
+  70671 DECLMETHOD %get_total_Pool
+  101323 DECLMETHOD %get_Ticket_Data
+  101536 DECLMETHOD %get_Ticket_TotalData
+  104701 DECLMETHOD %get_Ticket_map
+  72709 DECLMETHOD %get_BonusCount
+  69704 DECLMETHOD %get_prize
+  112976 DECLMETHOD %get_MinPrize
+  93519 DECLMETHOD %get_Bid
+  DECLPROC recv_internal
+  DECLGLOBVAR __tact_context
+  DECLGLOBVAR __tact_context_sender
+  DECLGLOBVAR __tact_child_contract_codes
+  DECLGLOBVAR __tact_randomized
+  __tact_store_address_opt PROCINLINE:<{
+    DUP
+    ISNULL
+    IF:<{
+      DROP
+      b{00} STSLICECONST
+    }>ELSE<{
+      SWAP
+      STSLICE
+    }>
+  }>
+  __tact_context_get PROCINLINE:<{
+    __tact_context GETGLOB
+    4 UNTUPLE
+  }>
+  __tact_context_get_sender PROCINLINE:<{
+    __tact_context_sender GETGLOB
+  }>
+  __tact_prepare_random PROCINLINE:<{
+    __tact_randomized GETGLOB
+    ISNULL
+    IF:<{
+      LTIME
+      ADDRAND
+      TRUE
+      __tact_randomized SETGLOB
+    }>
+  }>
+  __tact_dict_get_int_int PROCINLINE:<{
+    s1 s3 s3 XCHG3
+    DICTIGET
+    NULLSWAPIFNOT
+    IF:<{
+      SWAP
+      LDIX
+      DROP
+    }>ELSE<{
+      2DROP
+      PUSHNULL
+    }>
+  }>
+  __tact_dict_set_int_int PROCINLINE:<{
+    OVER
+    ISNULL
+    IF:<{
+      2DROP
+      -ROT
+      DICTIDEL
+      DROP
+    }>ELSE<{
+      NEWC
+      SWAP
+      STIX
+      s1 s3 s3 XCHG3
+      DICTISETB
+    }>
+  }>
+  __tact_dict_get_int_cell PROCINLINE:<{
+    -ROT
+    DICTIGETREF
+    NULLSWAPIFNOT
+    IF:<{
+    }>ELSE<{
+      DROP
+      PUSHNULL
+    }>
+  }>
+  __tact_dict_set_int_cell PROCINLINE:<{
+    DUP
+    ISNULL
+    IF:<{
+      DROP
+      -ROT
+      DICTIDEL
+      DROP
+    }>ELSE<{
+      s1 s3 s3 XCHG3
+      DICTISETREF
+    }>
+  }>
+  $DeployOk$_store PROCINLINE:<{
+    2952335191 PUSHINT
+    ROT
+    32 STU
+    64 STU
+  }>
+  $DeployOk$_store_cell PROCINLINE:<{
+    SWAP
+    $DeployOk$_store INLINECALLDICT
+    ENDC
+  }>
+  $Ticket_Owner$_store PROCINLINE:<{
+    s2 s3 XCHG2
+    STSLICE
+    257 PUSHINT
+    STIX
+    1 STI
+  }>
+  $Ticket_Owner$_store_cell PROCINLINE:<{
+    3 -ROLL
+    $Ticket_Owner$_store INLINECALLDICT
+    ENDC
+  }>
+  $Ticket_Owner$_load PROCINLINE:<{
+    LDMSGADDR
+    257 PUSHINT
+    LDIX
+    1 LDI
+    3 -ROLL
+  }>
+  $Ticket_Owner$_as_optional PROCINLINE:<{
+        3 TUPLE
+  }>
+  $Ticket_Owner$_load_opt PROCINLINE:<{
+    DUP
+    ISNULL
+    IF:<{
+      DROP
+      PUSHNULL
+    }>ELSE<{
+      CTOS
+      $Ticket_Owner$_load INLINECALLDICT
+      1 3 BLKDROP2
+      $Ticket_Owner$_as_optional INLINECALLDICT
+    }>
+  }>
+  $LotteryDraw$_store PROCINLINE:<{
+    s1 23 s() XCHG
+    s0 24 s() XCHG
+    STSLICE
+    s1 21 s() XCHG
+    257 PUSHINT
+    STIX
+    s1 19 s() XCHG
+    257 PUSHINT
+    STIX
+    s0 17 s() XCHG
+    NEWC
+    257 PUSHINT
+    STIX
+    s1 16 s() XCHG
+    257 PUSHINT
+    STIX
+    s1 s14 XCHG
+    257 PUSHINT
+    STIX
+    s0 s12 XCHG
+    NEWC
+    257 PUSHINT
+    STIX
+    s1 s11 XCHG
+    257 PUSHINT
+    STIX
+    s0 s9 XCHG2
+    __tact_store_address_opt INLINECALLDICT
+    s1 s7 XCHG
+    STDICT
+    s1 s5 XCHG
+    STDICT
+    s0 s3 XCHG
+    NEWC
+    257 PUSHINT
+    STIX
+    s1 s2 XCHG
+    257 PUSHINT
+    STIX
+    1 STI
+    s1 s2 XCHG
+    1 STI
+    s1 s2 XCHG
+    257 PUSHINT
+    STIX
+    s0 s2 XCHG
+    NEWC
+    257 PUSHINT
+    STIX
+    s1 s3 XCHG
+    257 PUSHINT
+    STIX
+    s1 s4 XCHG
+    257 PUSHINT
+    STIX
+    s0 s4 XCHG
+    NEWC
+    257 PUSHINT
+    STIX
+    s1 s6 XCHG
+    257 PUSHINT
+    STIX
+    s1 s6 XCHG
+    257 PUSHINT
+    STIX
+    s0 s6 XCHG
+    NEWC
+    257 PUSHINT
+    STIX
+    s1 s7 XCHG
+    257 PUSHINT
+    STIX
+    s1 s5 XCHG
+    STBREFR
+    s1 s4 XCHG
+    STBREFR
+    s1 s4 XCHG
+    STBREFR
+    s1 s3 XCHG
+    STBREFR
+    s1 s2 XCHG
+    STBREFR
+    STBREFR
+  }>
+  $LotteryDraw$_load PROCINLINE:<{
+    LDMSGADDR
+    257 PUSHINT
+    LDIX
+    257 PUSHINT
+    LDIX
+    LDREF
+    SWAP
+    CTOS
+    257 PUSHINT
+    LDIX
+    257 PUSHINT
+    LDIX
+    257 PUSHINT
+    LDIX
+    LDREF
+    DROP
+    CTOS
+    257 PUSHINT
+    LDIX
+    257 PUSHINT
+    LDIX
+                b{00} SDBEGINSQ
+                IF:<{
+                  PUSHNULL
+                }>ELSE<{
+                  LDMSGADDR
+                  SWAP
+                }>
+    SWAP
+    LDDICT
+    LDDICT
+    LDREF
+    DROP
+    CTOS
+    257 PUSHINT
+    LDIX
+    257 PUSHINT
+    LDIX
+    1 LDI
+    1 LDI
+    257 PUSHINT
+    LDIX
+    LDREF
+    DROP
+    CTOS
+    257 PUSHINT
+    LDIX
+    257 PUSHINT
+    LDIX
+    257 PUSHINT
+    LDIX
+    LDREF
+    DROP
+    CTOS
+    257 PUSHINT
+    LDIX
+    257 PUSHINT
+    LDIX
+    257 PUSHINT
+    LDIX
+    LDREF
+    DROP
+    CTOS
+    257 PUSHINT
+    LDIX
+    257 PUSHINT
+    LDIX
+    DROP
+    21 s() 24 s() XCHG
+    21 s() 23 s() XCHG
+    21 s() 22 s() XCHG
+  }>
+  $Context$_get_value PROCINLINE:<{
+    s1 s3 XCHG
+    3 BLKDROP
+  }>
+  $Ticket_Owner$_get_reward PROCINLINE:<{
+    DROP
+    NIP
+  }>
+  $Ticket_Owner$_get_hasClaimed PROCINLINE:<{
+    2 1 BLKDROP2
+  }>
+  $Ticket_Owner$_not_null PROCINLINE:<{
+        3 UNTUPLE
+  }>
+  $Ticket_Owner$_to_tuple PROCINLINE:<{
+        3 TUPLE
+  }>
+  $Ticket_Owner$_to_opt_tuple PROCINLINE:<{
+    DUP
+    ISNULL
+    IF:<{
+      DROP
+      PUSHNULL
+    }>ELSE<{
+      $Ticket_Owner$_not_null INLINECALLDICT
+      $Ticket_Owner$_to_tuple INLINECALLDICT
+    }>
+  }>
+  $Ticket_Owner$_to_opt_external PROCINLINE:<{
+    $Ticket_Owner$_to_opt_tuple INLINECALLDICT
+    DUP
+    ISNULL
+    IF:<{
+      DROP
+      PUSHNULL
+    }>ELSE<{
+    }>
+  }>
+  $LotteryDraw$init$_load PROCINLINE:<{
+    257 PUSHINT
+    LDIX
+    257 PUSHINT
+    LDIX
+    257 PUSHINT
+    LDIX
+    LDREF
+    SWAP
+    CTOS
+    257 PUSHINT
+    LDIX
+    257 PUSHINT
+    LDIX
+    257 PUSHINT
+    LDIX
+    LDREF
+    DROP
+    CTOS
+    257 PUSHINT
+    LDIX
+    257 PUSHINT
+    LDIX
+    DROP
+    s5 s8 XCHG
+    s5 s7 XCHG
+    s5 s6 XCHG
+  }>
+  $LotteryDraw$_contract_init PROCINLINE:<{
+    PUSHNULL
+    PUSHNULL
+    __tact_context_get_sender INLINECALLDICT
+    1000000 PUSHINT
+    __tact_context_get_sender INLINECALLDICT
+    0 PUSHINT
+    DUP
+    FALSE
+    s1 s1 s1 PUSH3
+    s0 s0 s0 PUSH3
+    FALSE
+        NOW
+        NOW
+    s0 18 s() XCHG
+    60 MULCONST
+    60 MULCONST
+    s1 18 s() XCHG
+    ADD
+    s13 23 s() XCHG
+    18 s() 22 s() XCHG
+    s13 21 s() XCHG
+    18 s() 20 s() XCHG
+    s13 19 s() XCHG
+    s13 17 s() XCHG
+    s12 16 s() XCHG
+    s11 s15 XCHG
+    s11 s14 XCHG
+    s11 s13 XCHG
+    s10 s12 XCHG
+    s9 s11 XCHG
+    s8 s10 XCHG
+    s1 s9 XCHG
+    s7 s8 XCHG
+    s6 s7 XCHG
+    s4 s6 XCHG
+    s1 s0 s5 XCHG3
+    s0 s4 XCHG
+  }>
+  $LotteryDraw$_contract_load PROCINLINE:<{
+    c4 PUSH
+    CTOS
+    1 LDI
+    SWAP
+    IF:<{
+      $LotteryDraw$_load INLINECALLDICT
+      24 s() POP
+      22 s() 23 s() XCHG
+      21 s() 22 s() XCHG
+      20 s() 21 s() XCHG
+      19 s() 20 s() XCHG
+      18 s() 19 s() XCHG
+      17 s() 18 s() XCHG
+      16 s() 17 s() XCHG
+      s15 16 s() XCHG
+      15 ROLL
+    }>ELSE<{
+      $LotteryDraw$init$_load INLINECALLDICT
+      s0 s8 XCHG
+      ENDS
+      7 ROLL
+      $LotteryDraw$_contract_init INLINECALLDICT
+    }>
+  }>
+  $LotteryDraw$_contract_store PROCINLINE:<{
+    NEWC
+    TRUE
+    SWAP
+    1 STI
+    s0 24 s() XCHG
+    s0 23 s() XCHG
+    s0 22 s() XCHG
+    s0 21 s() XCHG
+    s0 20 s() XCHG
+    s0 19 s() XCHG
+    s0 18 s() XCHG
+    s0 17 s() XCHG
+    s0 16 s() XCHG
+    15 -ROLL
+    $LotteryDraw$_store INLINECALLDICT
+    ENDC
+    c4 POP
+  }>
+  $global_random PROCINLINE:<{
+    __tact_prepare_random INLINECALLDICT
+    OVER
+    SUB
+        RAND
+    ADD
+  }>
+  $global_pow PROCINLINE:<{
+    DUP
+    -1 GTINT
+    5 THROWIFNOT
+    1 PUSHINT
+    SWAP
+    REPEAT:<{
+      OVER
+      MUL
+    }>
+    NIP
+  }>
+  $Cell$_fun_asSlice PROCINLINE:<{
+        CTOS
+  }>
+  $SendParameters$_constructor_to_value_body PROCINLINE:<{
+    0 PUSHINT
+    PUSHNULL
+    s4 s2 XCHG2
+    PUSHNULL
+    s4 s2 XCHG2
+    TRUE
+  }>
+  $LotteryDraw$_fun_random_uint PROCREF:<{
+        NEWC
+        NOW
+    SWAP
+    64 STU
+    32 STU
+        ENDC
+    $Cell$_fun_asSlice INLINECALLDICT
+                <{
+                    <{ DUP SREFS }> PUSHCONT
+                    <{ LDREFRTOS }> PUSHCONT
+                    WHILE
+                    DEPTH
+                    HASHEXT_SHA256
+                }> PUSHCONT
+                1 1 CALLXARGS
+    OVER
+    MOD
+    OVER
+    ADD
+    SWAP
+    MOD
+  }>
+  $LotteryDraw$_fun_get_decay_weight PROCREF:<{
+    19 s() PUSH
+    OVER
+    $global_pow INLINECALLDICT
+    19 s() PUSH
+    ROT
+    $global_pow INLINECALLDICT
+    SWAP
+    18 s() PUSH
+    MUL
+    SWAP
+    DIV
+  }>
+  $LotteryDraw$_fun_get_participant_count PROCREF:<{
+    s11 PUSH
+  }>
+  $LotteryDraw$_fun_get_total_Pool PROCREF:<{
+    s12 PUSH
+  }>
+  $LotteryDraw$_fun_get_Ticket_Data PROCREF:<{
+    257 PUSHINT
+    s15 PUSH
+    s0 s2 XCHG
+    __tact_dict_get_int_cell INLINECALLDICT
+    $Ticket_Owner$_load_opt INLINECALLDICT
+  }>
+  $LotteryDraw$_fun_get_Ticket_TotalData PROCREF:<{
+    s13 PUSH
+  }>
+  $LotteryDraw$_fun_get_Ticket_map PROCREF:<{
+    s14 PUSH
+  }>
+  $LotteryDraw$_fun_get_BonusCount PROCREF:<{
+    s6 PUSH
+  }>
+  $LotteryDraw$_fun_get_prize PROCREF:<{
+    s6 PUSH
+    24 s() 25 s() XCHG
+    23 s() 25 s() XCHG
+    22 s() 25 s() XCHG
+    21 s() 25 s() XCHG
+    20 s() 25 s() XCHG
+    19 s() 25 s() XCHG
+    18 s() 25 s() XCHG
+    17 s() 25 s() XCHG
+    16 s() 25 s() XCHG
+    s15 25 s() XCHG
+    s14 25 s() XCHG
+    s13 25 s() XCHG
+    s12 25 s() XCHG
+    s11 25 s() XCHG
+    s10 25 s() XCHG
+    s9 25 s() XCHG
+    s0 25 s() XCHG
+    s0 s8 XCHG
+    s0 s7 XCHG
+    s0 s6 XCHG
+    5 -ROLL
+    $LotteryDraw$_fun_get_decay_weight INLINECALLDICT
+    s1 25 s() XCHG
+    MUL
+    s4 PUSH
+    DIV
+    23 s() 24 s() XCHG
+    22 s() 23 s() XCHG
+    21 s() 22 s() XCHG
+    20 s() 21 s() XCHG
+    19 s() 20 s() XCHG
+    18 s() 19 s() XCHG
+    17 s() 18 s() XCHG
+    16 s() 17 s() XCHG
+    s15 16 s() XCHG
+    s14 s15 XCHG
+    s13 s14 XCHG
+    s12 s13 XCHG
+    s11 s12 XCHG
+    s10 s11 XCHG
+    s9 s10 XCHG
+    s8 s9 XCHG
+    s7 s8 XCHG
+    s6 s7 XCHG
+    s5 s6 XCHG
+    s4 s5 XCHG
+    s3 s4 XCHG
+    s1 s3 s0 XCHG3
+  }>
+  $LotteryDraw$_fun_get_MinPrize PROCREF:<{
+    s8 PUSH
+  }>
+  $LotteryDraw$_fun_get_Bid PROCREF:<{
+    22 s() PUSH
+    9 PUSHINT
+        DUP // x digits digits
+        1 LESSINT // x digits digits<=0
+        134 THROWIF // x digits
+        DUP // x digits digits
+        77 GTINT // x digits digits>77
+        134 THROWIF // x digits
+        NEWC // x digits b
+        ROTREV // b x digits
+        s1 PUSH // b x digits x
+        0 LESSINT // b x digits x<0?
+        <{
+            // b x digits
+            ROT // x digits b
+            x{2d} STSLICECONST // x digits b
+            ROT // digits b x
+            NEGATE // digits b -x
+            ROT // b -x digits
+        }>CONT IF
+        // b x digits
+        ONE // b x digits 1
+        OVER // b x digits 1 digits
+        <{ 10 MULCONST }>CONT REPEAT // b x digits 10^digits
+        s1 s2 XCHG // b digits x 10^digits
+        DIVMOD // b digits left right
+        s3 s3 XCHG2 // right digits b left
+        <{
+            // b x
+            <{
+                // b x
+                10 PUSHINT DIVMOD // b x/10 x%10
+                48 ADDCONST // b x/10 (x%10+48)
+                s2 s2 s0 XC2PU ISZERO // (x%10+48) b x/10 x/10==0?
+            }>CONT UNTIL
+            // ... b x
+            DROP // ... b
+            DEPTH DEC // ... b n
+            <{ 8 STU }>CONT REPEAT // b
+        }>CONT 2 1 CALLXARGS
+        // right digits "left"
+        ROT // digits "left" right
+        DUP // digits "left" right right
+        ISZERO // digits "left" right right==0?
+        <{
+            // digits "left" right
+            DROP // digits "left"
+            NIP // "left"
+        }>CONT
+        <{
+            // digits "left" right
+            ZERO // digits "left" right 0
+            SWAP // digits "left" 0 right
+            <{
+                // digits "left" i right
+                DUP // digits "left" i right right
+                10 PUSHINT // digits "left" i right right 10
+                MOD // digits "left" i right right%10
+                ISZERO // digits "left" i right right%10==0?
+            }>CONT
+            <{
+                // digits "left" i right
+                10 PUSHINT // digits "left" i right 10
+                DIV // digits "left" i right/10
+                SWAP // digits "left" right/10 i
+                INC // digits "left" right/10 i+1
+                SWAP // digits "left" i+1 right/10
+            }>CONT
+            WHILE // digits "left" i right
+            <{
+                // x
+                NEWC // x b
+                SWAP // b x
+                <{
+                    // b x
+                    10 PUSHINT DIVMOD // b x/10 x%10
+                    48 ADDCONST // b x/10 (x%10+48)
+                    s2 s2 s0 XC2PU ISZERO // (x%10+48) b x/10 x/10==0?
+                }>CONT UNTIL
+                // ... b x
+                DROP // ... b
+                DEPTH DEC DUP // ... b n n
+                ROTREV // ... n b n
+                <{
+                    // ... c n b
+                    s1 s2 XCHG // ... n c b
+                    8 STU // ... n b
+                }>CONT REPEAT // n b
+            }>CONT 1 2 CALLXARGS
+            // digits "left" i right_digits "right"
+            ROTREV // digits "left" "right" i right_digits
+            ADD // digits "left" "right" right_digits
+            s3 s1 XCHG // "right" "left" digits right_digits
+            SUB // "right" "left" digits_diff
+            SWAP // "right" digits_diff "left"
+            x{2e} STSLICECONST // "right" digits_diff "left."
+            SWAP // "right" "left." digits_diff
+            <{
+                // "right" "left."
+                x{30} STSLICECONST // "right" "left.0"
+            }>CONT REPEAT // "right" "left.000"
+            STB // "left.000right"
+        }>CONT
+        IFELSE // b
+        ENDC CTOS // s
+  }>
+  $MessageParameters$_constructor_bounce_to_value_mode_body PROCINLINE:<{
+    s3 s3 XCHG2
+    s0 s4 XCHG
+  }>
+  $LotteryDraw$_fun_notify PROCINLINE:<{
+    __tact_context_get_sender INLINECALLDICT
+    FALSE
+    0 PUSHINT
+    s0 s3 XCHG2
+    66 PUSHINT
+    SWAP
+    $MessageParameters$_constructor_bounce_to_value_mode_body INLINECALLDICT
+        NEWC
+        b{01} STSLICECONST  // store tag = $0 and ihr_disabled = true
+        1 STI               // store `bounce`
+        b{000} STSLICECONST // store bounced = false and src = addr_none
+        STSLICE             // store `to`
+        SWAP
+        STGRAMS             // store `value`
+        106 PUSHINT         // 1 + 4 + 4 + 64 + 32 + 1
+        STZEROES
+        // → Stack state
+        // s0: Builder
+        // s1: `body`
+        // s2: `mode`
+        STDICT
+        ENDC
+        SWAP
+        SENDRAWMSG
+  }>
+  $Ticket_Owner$_constructor_participent_reward_hasClaimed PROCINLINE:<{
+  }>
+  $SendParameters$_constructor_to_value_mode PROCINLINE:<{
+    PUSHNULL
+    2SWAP
+    PUSHNULL
+    PUSHNULL
+    s0 s0 s3 XCHG3
+    TRUE
+  }>
+  $DeployOk$_constructor_queryId PROCINLINE:<{
+  }>
+  %random_uint PROC:<{
+    $LotteryDraw$_contract_load INLINECALLDICT
+    23 s() 25 s() XCHG
+    22 s() 24 s() XCHG
+    21 s() 23 s() XCHG
+    20 s() 22 s() XCHG
+    19 s() 21 s() XCHG
+    18 s() 20 s() XCHG
+    17 s() 19 s() XCHG
+    16 s() 18 s() XCHG
+    s15 17 s() XCHG
+    s14 16 s() XCHG
+    2 14 BLKSWAP
+    $LotteryDraw$_fun_random_uint INLINECALLDICT
+    16 s() POP
+    15 BLKDROP
+    8 1 BLKDROP2
+  }>
+  %get_decay_weight PROC:<{
+    $LotteryDraw$_contract_load INLINECALLDICT
+    23 s() 24 s() XCHG
+    22 s() 23 s() XCHG
+    21 s() 22 s() XCHG
+    20 s() 21 s() XCHG
+    19 s() 20 s() XCHG
+    18 s() 19 s() XCHG
+    17 s() 18 s() XCHG
+    16 s() 17 s() XCHG
+    s15 16 s() XCHG
+    15 ROLL
+    $LotteryDraw$_fun_get_decay_weight INLINECALLDICT
+    16 s() POP
+    15 BLKDROP
+    8 1 BLKDROP2
+  }>
+  %get_participant_count PROC:<{
+    $LotteryDraw$_contract_load INLINECALLDICT
+    $LotteryDraw$_fun_get_participant_count INLINECALLDICT
+    16 s() POP
+    15 BLKDROP
+    8 1 BLKDROP2
+  }>
+  %get_total_Pool PROC:<{
+    $LotteryDraw$_contract_load INLINECALLDICT
+    $LotteryDraw$_fun_get_total_Pool INLINECALLDICT
+    16 s() POP
+    15 BLKDROP
+    8 1 BLKDROP2
+  }>
+  %get_Ticket_Data PROC:<{
+    $LotteryDraw$_contract_load INLINECALLDICT
+    23 s() 24 s() XCHG
+    22 s() 23 s() XCHG
+    21 s() 22 s() XCHG
+    20 s() 21 s() XCHG
+    19 s() 20 s() XCHG
+    18 s() 19 s() XCHG
+    17 s() 18 s() XCHG
+    16 s() 17 s() XCHG
+    s15 16 s() XCHG
+    15 ROLL
+    $LotteryDraw$_fun_get_Ticket_Data INLINECALLDICT
+    16 s() POP
+    15 BLKDROP
+    8 1 BLKDROP2
+    $Ticket_Owner$_to_opt_external INLINECALLDICT
+  }>
+  %get_Ticket_TotalData PROC:<{
+    $LotteryDraw$_contract_load INLINECALLDICT
+    $LotteryDraw$_fun_get_Ticket_TotalData INLINECALLDICT
+    16 s() POP
+    15 BLKDROP
+    8 1 BLKDROP2
+  }>
+  %get_Ticket_map PROC:<{
+    $LotteryDraw$_contract_load INLINECALLDICT
+    $LotteryDraw$_fun_get_Ticket_map INLINECALLDICT
+    16 s() POP
+    15 BLKDROP
+    8 1 BLKDROP2
+  }>
+  %get_BonusCount PROC:<{
+    $LotteryDraw$_contract_load INLINECALLDICT
+    $LotteryDraw$_fun_get_BonusCount INLINECALLDICT
+    16 s() POP
+    15 BLKDROP
+    8 1 BLKDROP2
+  }>
+  %get_prize PROC:<{
+    $LotteryDraw$_contract_load INLINECALLDICT
+    23 s() 24 s() XCHG
+    22 s() 23 s() XCHG
+    21 s() 22 s() XCHG
+    20 s() 21 s() XCHG
+    19 s() 20 s() XCHG
+    18 s() 19 s() XCHG
+    17 s() 18 s() XCHG
+    16 s() 17 s() XCHG
+    s15 16 s() XCHG
+    15 ROLL
+    $LotteryDraw$_fun_get_prize INLINECALLDICT
+    16 s() POP
+    15 BLKDROP
+    8 1 BLKDROP2
+  }>
+  %get_MinPrize PROC:<{
+    $LotteryDraw$_contract_load INLINECALLDICT
+    $LotteryDraw$_fun_get_MinPrize INLINECALLDICT
+    16 s() POP
+    15 BLKDROP
+    8 1 BLKDROP2
+  }>
+  %get_Bid PROC:<{
+    $LotteryDraw$_contract_load INLINECALLDICT
+    $LotteryDraw$_fun_get_Bid INLINECALLDICT
+    16 s() POP
+    15 BLKDROP
+    8 1 BLKDROP2
+  }>
+  recv_internal PROC:<{
+    SWAP
+    CTOS
+    2 PUSHINT
+    SDSKIPFIRST
+    1 LDI
+    1 LDI
+    LDMSGADDR
+    OVER
+    s3 s4 XCHG
+    s6 s6 XCHG2
+    4 TUPLE
+    __tact_context SETGLOB
+    s0 s2 XCHG
+    __tact_context_sender SETGLOB
+    $LotteryDraw$_contract_load INLINECALLDICT
+    s0 25 s() XCHG
+    IFJMP:<{
+      15 BLKDROP
+      10 BLKDROP
+    }>
+    0 PUSHINT
+    24 s() PUSH
+    SBITS
+    DUP
+    31 GTINT
+    IF:<{
+      NIP
+      s0 24 s() XCHG
+      32 LDU
+      s0 25 s() XCHG
+    }>
+    OVER
+    2553472917 PUSHINT
+    EQUAL
+    IFJMP:<{
+      2DROP
+      s0 23 s() XCHG
+      257 PUSHINT
+      LDIX
+      DROP
+      63603 PUSHINT
+      s11 PUSH
+      26 s() PUSH
+      LESS
+      THROWANYIFNOT
+      36968 PUSHINT
+      __tact_context_get INLINECALLDICT
+      $Context$_get_value INLINECALLDICT
+      23 s() PUSH
+      SWAP
+      LEQ
+      THROWANYIFNOT
+      42805 PUSHINT
+          NOW
+      s3 s(-1) PUXC
+      LEQ
+      IF:<{
+            NOW
+        25 s() PUSH
+        SWAP
+        GEQ
+      }>ELSE<{
+        FALSE
+      }>
+      THROWANYIFNOT
+      37181 PUSHINT
+      s10 PUSH
+      NOT
+      THROWANYIFNOT
+      DUP
+      22830 PUSHINT
+      s14 PUSH
+      257 PUSHINT
+      s3 PUSH
+      __tact_dict_get_int_cell INLINECALLDICT
+      $Ticket_Owner$_load_opt INLINECALLDICT
+      ISNULL
+      THROWANYIFNOT
+      s0 s11 XCHG
+      INC
+      257 PUSHINT
+      DUP
+      s3 16 s() XCHG
+      s2 s0 s1 XC2PU
+      s0 17 s() XCHG
+      SWAP
+      __tact_dict_set_int_int INLINECALLDICT
+      257 PUSHINT
+      __tact_context_get_sender INLINECALLDICT
+      0 PUSHINT
+      FALSE
+      $Ticket_Owner$_constructor_participent_reward_hasClaimed INLINECALLDICT
+      NEWC
+      $Ticket_Owner$_store_cell INLINECALLDICT
+      s3 s14 XCHG
+      s1 s12 s0 XCHG3
+      __tact_dict_set_int_cell INLINECALLDICT
+      __tact_context_get INLINECALLDICT
+      $Context$_get_value INLINECALLDICT
+      21 s() PUSH
+      SUB
+      s0 s11 XCHG
+      21 s() PUSH
+      ADD
+      s11 PUSH
+      0 GTINT
+      IF:<{
+        __tact_context_get_sender INLINECALLDICT
+        s0 s12 XCHG2
+        2 PUSHINT
+        $SendParameters$_constructor_to_value_mode INLINECALLDICT
+            NEWC
+            b{01} STSLICECONST  // store tag = $0 and ihr_disabled = true
+            1 STI               // store `bounce`
+            b{000} STSLICECONST // store bounced = false and src = addr_none
+            STSLICE             // store `to`
+            SWAP
+            STGRAMS             // store `value`
+            105 PUSHINT         // 1 + 4 + 4 + 64 + 32
+            STZEROES            // store currency_collection, ihr_fee, fwd_fee, created_lt and created_at
+            // → Stack state
+            // s0: Builder
+            // s1: `data`
+            // s2: `code`
+            // s3: `body`
+            // s4: `mode`
+            // Group 2: Placing the Builder after code and data, then checking those for nullability
+            s2 XCHG0
+            DUP2
+            ISNULL
+            SWAP
+            ISNULL
+            AND
+            // → Stack state
+            // s0: -1 (true) if `data` and `code` are both null, 0 (false) otherwise
+            // s1: `code`
+            // s2: `data`
+            // s3: Builder
+            // s4: `body`
+            // s5: `mode`
+            // Group 3: Left branch of the IFELSE, executed if s0 is -1 (true)
+            <{
+                DROP2 // drop `data` and `code`, since either of those is null
+                b{0} STSLICECONST
+            }> PUSHCONT
+            // Group 3: Right branch of the IFELSE, executed if s0 is 0 (false)
+            <{
+                // _ split_depth:(Maybe (## 5))
+                //   special:(Maybe TickTock)
+                //   code:(Maybe ^Cell)
+                //   data:(Maybe ^Cell)
+                //   library:(Maybe ^Cell)
+                // = StateInit;
+                ROT                // place message Builder on top
+                b{10} STSLICECONST // store Maybe = true, Either = false
+                // Start composing inlined StateInit
+                b{00} STSLICECONST // store split_depth and special first
+                STDICT             // store code
+                STDICT             // store data
+                b{0} STSLICECONST  // store library
+            }> PUSHCONT
+            // Group 3: IFELSE that does the branching shown above
+            IFELSE
+            // → Stack state
+            // s0: Builder
+            // s1: null or StateInit
+            // s2: `body`
+            // s3: `mode`
+            // Group 4: Finalizing the message
+            STDICT // store `body` as ref with an extra Maybe bit, since `body` might be null
+            ENDC
+            // → Stack state
+            // s0: Cell
+            // s1: `mode`
+            // Group 5: Sending the message, with `mode` on top
+            SWAP
+            SENDRAWMSG // https://github.com/tact-lang/tact/issues/1558
+      }>ELSE<{
+        s11 POP
+      }>
+      21 s() 23 s() XCHG
+      20 s() 22 s() XCHG
+      19 s() 21 s() XCHG
+      18 s() 20 s() XCHG
+      17 s() 19 s() XCHG
+      16 s() 18 s() XCHG
+      s15 17 s() XCHG
+      s14 16 s() XCHG
+      s13 s15 XCHG
+      s9 s14 XCHG
+      s0 s13 XCHG
+      s10 s12 XCHG
+      s10 s11 XCHG
+      s8 s10 XCHG
+      s7 s9 XCHG
+      s6 s8 XCHG
+      s5 s7 XCHG
+      s4 s6 XCHG
+      s3 s5 XCHG
+      s4 s3 s0 XCHG3
+      $LotteryDraw$_contract_store INLINECALLDICT
+    }>
+    OVER
+    3436563871 PUSHINT
+    EQUAL
+    IFJMP:<{
+      2DROP
+      s0 23 s() XCHG
+      LDDICT
+      257 PUSHINT
+      LDIX
+      DROP
+      DUP
+      48696 PUSHINT
+      OVER
+      0 GTINT
+      THROWANYIFNOT
+      42805 PUSHINT
+          NOW
+      s5 s(-1) PUXC
+      LEQ
+      IF:<{
+            NOW
+        27 s() PUSH
+        SWAP
+        GEQ
+      }>ELSE<{
+        FALSE
+      }>
+      THROWANYIFNOT
+      63603 PUSHINT
+      s13 s1 PUSH2
+      ADD
+      28 s() PUSH
+      LEQ
+      THROWANYIFNOT
+      37181 PUSHINT
+      s12 PUSH
+      NOT
+      THROWANYIFNOT
+      0 PUSHINT
+      WHILE:<{
+        s0 s1 PUSH2
+        LESS
+      }>DO<{
+        257 PUSHINT
+        OVER
+        INC
+        s1 s5 PUSH2
+        3 -ROLL
+        __tact_dict_get_int_int INLINECALLDICT
+        49271 PUSHINT
+        OVER
+        0 GTINT
+        THROWANYIFNOT
+        22830 PUSHINT
+        17 s() PUSH
+        257 PUSHINT
+        s3 PUSH
+        __tact_dict_get_int_cell INLINECALLDICT
+        $Ticket_Owner$_load_opt INLINECALLDICT
+        ISNULL
+        THROWANYIFNOT
+        s0 s14 XCHG
+        INC
+        257 PUSHINT
+        DUP
+        s2 19 s() XCHG
+        19 s() PUSH
+        SWAP
+        17 s() PUSH
+        SWAP
+        __tact_dict_set_int_int INLINECALLDICT
+        257 PUSHINT
+        __tact_context_get_sender INLINECALLDICT
+        0 PUSHINT
+        FALSE
+        $Ticket_Owner$_constructor_participent_reward_hasClaimed INLINECALLDICT
+        NEWC
+        $Ticket_Owner$_store_cell INLINECALLDICT
+        s3 18 s() XCHG
+        s1 s2 XCHG
+        s1 16 s() XCHG
+        __tact_dict_set_int_cell INLINECALLDICT
+        s0 s14 XCHG
+        24 s() PUSH
+        ADD
+        s0 s15 XCHG
+        INC
+        4 13 REVERSE
+      }>
+      s2 s3 XCHG
+      3 BLKDROP
+      __tact_context_get INLINECALLDICT
+      $Context$_get_value INLINECALLDICT
+      22 s() PUSH
+      ROT
+      MUL
+      SUB
+      DUP
+      0 GTINT
+      IF:<{
+        __tact_context_get_sender INLINECALLDICT
+        SWAP
+        2 PUSHINT
+        $SendParameters$_constructor_to_value_mode INLINECALLDICT
+            NEWC
+            b{01} STSLICECONST  // store tag = $0 and ihr_disabled = true
+            1 STI               // store `bounce`
+            b{000} STSLICECONST // store bounced = false and src = addr_none
+            STSLICE             // store `to`
+            SWAP
+            STGRAMS             // store `value`
+            105 PUSHINT         // 1 + 4 + 4 + 64 + 32
+            STZEROES            // store currency_collection, ihr_fee, fwd_fee, created_lt and created_at
+            // → Stack state
+            // s0: Builder
+            // s1: `data`
+            // s2: `code`
+            // s3: `body`
+            // s4: `mode`
+            // Group 2: Placing the Builder after code and data, then checking those for nullability
+            s2 XCHG0
+            DUP2
+            ISNULL
+            SWAP
+            ISNULL
+            AND
+            // → Stack state
+            // s0: -1 (true) if `data` and `code` are both null, 0 (false) otherwise
+            // s1: `code`
+            // s2: `data`
+            // s3: Builder
+            // s4: `body`
+            // s5: `mode`
+            // Group 3: Left branch of the IFELSE, executed if s0 is -1 (true)
+            <{
+                DROP2 // drop `data` and `code`, since either of those is null
+                b{0} STSLICECONST
+            }> PUSHCONT
+            // Group 3: Right branch of the IFELSE, executed if s0 is 0 (false)
+            <{
+                // _ split_depth:(Maybe (## 5))
+                //   special:(Maybe TickTock)
+                //   code:(Maybe ^Cell)
+                //   data:(Maybe ^Cell)
+                //   library:(Maybe ^Cell)
+                // = StateInit;
+                ROT                // place message Builder on top
+                b{10} STSLICECONST // store Maybe = true, Either = false
+                // Start composing inlined StateInit
+                b{00} STSLICECONST // store split_depth and special first
+                STDICT             // store code
+                STDICT             // store data
+                b{0} STSLICECONST  // store library
+            }> PUSHCONT
+            // Group 3: IFELSE that does the branching shown above
+            IFELSE
+            // → Stack state
+            // s0: Builder
+            // s1: null or StateInit
+            // s2: `body`
+            // s3: `mode`
+            // Group 4: Finalizing the message
+            STDICT // store `body` as ref with an extra Maybe bit, since `body` might be null
+            ENDC
+            // → Stack state
+            // s0: Cell
+            // s1: `mode`
+            // Group 5: Sending the message, with `mode` on top
+            SWAP
+            SENDRAWMSG // https://github.com/tact-lang/tact/issues/1558
+      }>ELSE<{
+        DROP
+      }>
+      21 s() 23 s() XCHG
+      20 s() 22 s() XCHG
+      19 s() 21 s() XCHG
+      18 s() 20 s() XCHG
+      17 s() 19 s() XCHG
+      16 s() 18 s() XCHG
+      s15 17 s() XCHG
+      s14 16 s() XCHG
+      s13 s15 XCHG
+      2 13 BLKSWAP
+      $LotteryDraw$_contract_store INLINECALLDICT
+    }>
+    OVER
+    2716683946 PUSHINT
+    EQUAL
+    IFJMP:<{
+      2DROP
+      4 4 BLKDROP2
+      19 s() POP
+      16461 PUSHINT
+      __tact_context_get_sender INLINECALLDICT
+      19 s() PUSH
+      SDEQ
+      THROWANYIFNOT
+      49658 PUSHINT
+      s5 PUSH
+      NOT
+      THROWANYIFNOT
+      39078 PUSHINT
+      s6 PUSH
+      0 GTINT
+      THROWANYIFNOT
+      s6 s15 PUSH2
+      MUL
+      100 PUSHINT
+      DIV
+      s7 s(-1) PUXC
+      SUB
+      s0 s15 PUSH2
+      MUL
+      100 PUSHINT
+      DIV
+      TUCK
+      SUB
+      s1 s7 XCPU
+      DIV
+      OVER
+      0 LESSINT
+      IF:<{
+        0 PUSHINT
+        s2 POP
+      }>
+      s7 s15 PUSH2
+      MUL
+      100 PUSHINT
+      DIV
+      s2 PUSH
+      1 RSHIFT#
+      0 PUSHINT
+      1 PUSHINT
+      WHILE:<{
+        s0 s3 PUSH2
+        LEQ
+      }>DO<{
+        5 4 REVERSE
+        s3 s6 XCHG
+        s2 s5 XCHG
+        s2 s3 XCHG
+        s1 24 s() XCHG
+        s0 25 s() XCHG
+        25 s() PUSH
+        $LotteryDraw$_fun_get_decay_weight INLINECALLDICT
+        s1 25 s() XCHG
+        ADD
+        s0 25 s() XCHG
+        INC
+        24 s() 25 s() XCHG
+        s1 24 s() XCHG
+        s4 s8 XCHG
+        s3 s7 XCHG
+        5 2 REVERSE
+        s2 s3 XCHG
+      }>
+      s8 POP
+      0 PUSHINT
+      WHILE:<{
+        s8 s11 PUSH2
+        LEQ
+      }>DO<{
+        5 4 REVERSE
+        s3 s6 XCHG
+        s5 s4 s0 XCHG3
+        s2 s3 XCHG
+        s1 24 s() XCHG
+        s0 25 s() XCHG
+        24 s() PUSH
+        $LotteryDraw$_fun_get_decay_weight INLINECALLDICT
+        s1 26 s() XCHG
+        ADD
+        s0 24 s() XCHG
+        INC
+        s1 24 s() XCHG
+        s0 s8 XCHG
+        s3 s7 XCHG
+        5 2 REVERSE
+        s3 s4 s4 XCHG3
+      }>
+      s7 POP
+      s7 POP
+      s8 POP
+      20 s() 22 s() XCHG
+      19 s() 21 s() XCHG
+      18 s() 20 s() XCHG
+      17 s() 19 s() XCHG
+      16 s() 18 s() XCHG
+      s15 17 s() XCHG
+      s14 16 s() XCHG
+      s13 s15 XCHG
+      s12 s14 XCHG
+      s11 s13 XCHG
+      s10 s12 XCHG
+      s9 s11 XCHG
+      s8 s10 XCHG
+      TRUE
+      s0 s10 XCHG
+      s7 s9 XCHG
+      s2 s8 XCHG
+      s3 s7 XCHG
+      s5 s0 s6 XCHG3
+      s4 s1 s4 XCHG3
+      s0 s3 XCHG
+      $LotteryDraw$_contract_store INLINECALLDICT
+    }>
+    OVER
+    2716683947 PUSHINT
+    EQUAL
+    IFJMP:<{
+      2DROP
+      23 s() POP
+      16461 PUSHINT
+      __tact_context_get_sender INLINECALLDICT
+      23 s() PUSH
+      SDEQ
+      THROWANYIFNOT
+      56656 PUSHINT
+      s8 PUSH
+      NOT
+      THROWANYIFNOT
+      10839 PUSHINT
+      s9 PUSH
+      THROWANYIFNOT
+      1 PUSHINT
+      s10 PUSH
+      WHILE:<{
+        DUP
+        0 GTINT
+      }>DO<{
+        DUP
+        INC
+        s2 s(-1) PUXC
+        $global_random INLINECALLDICT
+        257 PUSHINT
+        DUP
+        17 s() PUSH
+        s2 s4 s2 XCPUXC
+        __tact_dict_get_int_int INLINECALLDICT
+        257 PUSHINT
+        s0 s0 PUSH2
+        19 s() PUSH
+        s2 s5 s2 XCPUXC
+        __tact_dict_get_int_int INLINECALLDICT
+        OVER
+        s3 19 s() XCHG
+        s5 PUSH
+        -ROT
+        __tact_dict_set_int_int INLINECALLDICT
+        257 PUSHINT
+        s3 s2 s2 XC2PU
+        s1 s2 XCHG
+        s1 18 s() XCHG
+        __tact_dict_set_int_int INLINECALLDICT
+        s14 s0 XCPU
+        SUB
+      }>
+      2DROP
+      s3 s5 s3 PUSH3
+      SUB
+      1 PUSHINT
+      s5 s4 s9 PUSH3
+      WHILE:<{
+        s3 s15 PUSH2
+        LEQ
+      }>DO<{
+        s3 s10 PUSH2
+        LEQ
+        IF:<{
+          s3 PUSH
+          DEC
+          24 s() 28 s() XCHG
+          23 s() 27 s() XCHG
+          22 s() 26 s() XCHG
+          21 s() 25 s() XCHG
+          20 s() 28 s() XCHG
+          19 s() 27 s() XCHG
+          18 s() 26 s() XCHG
+          17 s() 25 s() XCHG
+          16 s() 28 s() XCHG
+          s15 27 s() XCHG
+          s14 26 s() XCHG
+          s13 25 s() XCHG
+          s12 28 s() XCHG
+          s11 27 s() XCHG
+          s10 26 s() XCHG
+          s9 25 s() XCHG
+          s8 28 s() XCHG
+          s7 27 s() XCHG
+          s6 26 s() XCHG
+          s5 25 s() XCHG
+          s4 28 s() XCHG
+          s3 27 s() XCHG
+          s2 29 s() XCHG
+          s1 30 s() XCHG
+          $LotteryDraw$_fun_get_decay_weight INLINECALLDICT
+          26 s() PUSH
+          SWAP
+          MUL
+          27 s() PUSH
+          DIV
+        }>ELSE<{
+          s3 PUSH
+          DEC
+          24 s() 28 s() XCHG
+          23 s() 27 s() XCHG
+          22 s() 26 s() XCHG
+          21 s() 25 s() XCHG
+          20 s() 28 s() XCHG
+          19 s() 27 s() XCHG
+          18 s() 26 s() XCHG
+          17 s() 25 s() XCHG
+          16 s() 28 s() XCHG
+          s15 27 s() XCHG
+          s14 26 s() XCHG
+          s13 25 s() XCHG
+          s12 28 s() XCHG
+          s11 27 s() XCHG
+          s10 26 s() XCHG
+          s9 25 s() XCHG
+          s8 28 s() XCHG
+          s7 27 s() XCHG
+          s6 26 s() XCHG
+          s5 25 s() XCHG
+          s4 28 s() XCHG
+          s3 27 s() XCHG
+          s2 29 s() XCHG
+          s1 30 s() XCHG
+          $LotteryDraw$_fun_get_decay_weight INLINECALLDICT
+          25 s() PUSH
+          SWAP
+          MUL
+          29 s() PUSH
+          DIV
+        }>
+        30 s() PUSH
+        SWAP
+        ADD
+        257 PUSHINT
+        DUP
+        17 s() PUSH
+        -ROT
+        31 s() PUSH
+        SWAP
+        __tact_dict_get_int_int INLINECALLDICT
+        DUP
+        ISNULL
+        NOT
+        IF:<{
+          s15 PUSH
+          257 PUSHINT
+          s2 PUSH
+          __tact_dict_get_int_cell INLINECALLDICT
+          $Ticket_Owner$_load_opt INLINECALLDICT
+          $Ticket_Owner$_not_null INLINECALLDICT
+          NIP
+          257 PUSHINT
+          s4 s4 XCHG2
+          NEWC
+          $Ticket_Owner$_store_cell INLINECALLDICT
+          s3 16 s() XCHG
+          __tact_dict_set_int_cell INLINECALLDICT
+          s0 s13 XCHG
+        }>ELSE<{
+          2DROP
+        }>
+        s0 27 s() XCHG
+        INC
+        27 s() 29 s() XCHG
+        s1 28 s() XCHG
+        23 s() 27 s() XCHG
+        22 s() 26 s() XCHG
+        21 s() 25 s() XCHG
+        20 s() 24 s() XCHG
+        19 s() 23 s() XCHG
+        18 s() 22 s() XCHG
+        17 s() 21 s() XCHG
+        16 s() 20 s() XCHG
+        s15 19 s() XCHG
+        s14 18 s() XCHG
+        s13 17 s() XCHG
+        s12 16 s() XCHG
+        s11 s15 XCHG
+        s10 s14 XCHG
+        s9 s13 XCHG
+        s8 s12 XCHG
+        s7 s11 XCHG
+        s6 s10 XCHG
+        s5 s9 XCHG
+        s4 s8 XCHG
+        s3 s7 XCHG
+        s6 s1 s3 XCHG3
+      }>
+      6 BLKDROP
+      s7 POP
+      20 s() 22 s() XCHG
+      19 s() 21 s() XCHG
+      18 s() 20 s() XCHG
+      17 s() 19 s() XCHG
+      16 s() 18 s() XCHG
+      s15 17 s() XCHG
+      s14 16 s() XCHG
+      s13 s15 XCHG
+      s12 s14 XCHG
+      s11 s13 XCHG
+      s10 s12 XCHG
+      s9 s11 XCHG
+      s8 s10 XCHG
+      s7 s9 XCHG
+      TRUE
+      s0 s9 XCHG
+      s6 s8 XCHG
+      s5 s7 XCHG
+      s4 s6 XCHG
+      s3 s5 XCHG
+      s4 s3 s0 XCHG3
+      s1 s2 XCHG
+      $LotteryDraw$_contract_store INLINECALLDICT
+    }>
+    OVER
+    1442497784 PUSHINT
+    EQUAL
+    IFJMP:<{
+      2DROP
+      s0 23 s() XCHG
+      257 PUSHINT
+      LDIX
+      DROP
+      9971 PUSHINT
+      s13 PUSH
+      257 PUSHINT
+      s3 PUSH
+      __tact_dict_get_int_cell INLINECALLDICT
+      $Ticket_Owner$_load_opt INLINECALLDICT
+      ISNULL
+      NOT
+      THROWANYIFNOT
+      10738 PUSHINT
+      s9 PUSH
+      THROWANYIFNOT
+      24322 PUSHINT
+      s13 PUSH
+      257 PUSHINT
+      s3 PUSH
+      __tact_dict_get_int_cell INLINECALLDICT
+      $Ticket_Owner$_load_opt INLINECALLDICT
+      $Ticket_Owner$_not_null INLINECALLDICT
+      $Ticket_Owner$_get_hasClaimed INLINECALLDICT
+      0 EQINT
+      THROWANYIFNOT
+      s12 PUSH
+      257 PUSHINT
+      s2 PUSH
+      __tact_dict_get_int_cell INLINECALLDICT
+      $Ticket_Owner$_load_opt INLINECALLDICT
+      $Ticket_Owner$_not_null INLINECALLDICT
+      $Ticket_Owner$_get_reward INLINECALLDICT
+      59515 PUSHINT
+      OVER
+      ISNULL
+      NOT
+      THROWANYIFNOT
+      s13 PUSH
+      257 PUSHINT
+      s3 PUSH
+      __tact_dict_get_int_cell INLINECALLDICT
+      $Ticket_Owner$_load_opt INLINECALLDICT
+      $Ticket_Owner$_not_null INLINECALLDICT
+      2DROP
+      TRUE
+      0 PUSHINT
+      257 PUSHINT
+      s3 s1 s3 XCHG3
+      NEWC
+      $Ticket_Owner$_store_cell INLINECALLDICT
+      s3 s15 XCHG
+      s1 s15 s0 XCHG3
+      __tact_dict_set_int_cell INLINECALLDICT
+      s12 PUSH
+      ISNULL
+      NOT
+      IF:<{
+        __tact_context_get_sender INLINECALLDICT
+            B{b5ee9c724101010100120000200000000048656c6c6f2c20576f726c646db25624} B>boc PUSHREF
+        s1 s14 s0 XCHG3
+        $SendParameters$_constructor_to_value_body INLINECALLDICT
+            NEWC
+            b{01} STSLICECONST  // store tag = $0 and ihr_disabled = true
+            1 STI               // store `bounce`
+            b{000} STSLICECONST // store bounced = false and src = addr_none
+            STSLICE             // store `to`
+            SWAP
+            STGRAMS             // store `value`
+            105 PUSHINT         // 1 + 4 + 4 + 64 + 32
+            STZEROES            // store currency_collection, ihr_fee, fwd_fee, created_lt and created_at
+            // → Stack state
+            // s0: Builder
+            // s1: `data`
+            // s2: `code`
+            // s3: `body`
+            // s4: `mode`
+            // Group 2: Placing the Builder after code and data, then checking those for nullability
+            s2 XCHG0
+            DUP2
+            ISNULL
+            SWAP
+            ISNULL
+            AND
+            // → Stack state
+            // s0: -1 (true) if `data` and `code` are both null, 0 (false) otherwise
+            // s1: `code`
+            // s2: `data`
+            // s3: Builder
+            // s4: `body`
+            // s5: `mode`
+            // Group 3: Left branch of the IFELSE, executed if s0 is -1 (true)
+            <{
+                DROP2 // drop `data` and `code`, since either of those is null
+                b{0} STSLICECONST
+            }> PUSHCONT
+            // Group 3: Right branch of the IFELSE, executed if s0 is 0 (false)
+            <{
+                // _ split_depth:(Maybe (## 5))
+                //   special:(Maybe TickTock)
+                //   code:(Maybe ^Cell)
+                //   data:(Maybe ^Cell)
+                //   library:(Maybe ^Cell)
+                // = StateInit;
+                ROT                // place message Builder on top
+                b{10} STSLICECONST // store Maybe = true, Either = false
+                // Start composing inlined StateInit
+                b{00} STSLICECONST // store split_depth and special first
+                STDICT             // store code
+                STDICT             // store data
+                b{0} STSLICECONST  // store library
+            }> PUSHCONT
+            // Group 3: IFELSE that does the branching shown above
+            IFELSE
+            // → Stack state
+            // s0: Builder
+            // s1: null or StateInit
+            // s2: `body`
+            // s3: `mode`
+            // Group 4: Finalizing the message
+            STDICT // store `body` as ref with an extra Maybe bit, since `body` might be null
+            ENDC
+            // → Stack state
+            // s0: Cell
+            // s1: `mode`
+            // Group 5: Sending the message, with `mode` on top
+            SWAP
+            SENDRAWMSG // https://github.com/tact-lang/tact/issues/1558
+      }>ELSE<{
+        s12 POP
+      }>
+      21 s() 23 s() XCHG
+      20 s() 22 s() XCHG
+      19 s() 21 s() XCHG
+      18 s() 20 s() XCHG
+      17 s() 19 s() XCHG
+      16 s() 18 s() XCHG
+      s15 17 s() XCHG
+      s14 16 s() XCHG
+      s13 s15 XCHG
+      2 13 BLKSWAP
+      $LotteryDraw$_contract_store INLINECALLDICT
+    }>
+    OVER
+    3976926516 PUSHINT
+    EQUAL
+    IFJMP:<{
+      2DROP
+      s0 23 s() XCHG
+      257 PUSHINT
+      LDIX
+      DROP
+      15882 PUSHINT
+      __tact_context_get_sender INLINECALLDICT
+      24 s() PUSH
+      SDEQ
+      THROWANYIFNOT
+      s1 23 s() XCHG
+      ADD
+      21 s() 23 s() XCHG
+      20 s() 22 s() XCHG
+      19 s() 21 s() XCHG
+      18 s() 20 s() XCHG
+      17 s() 19 s() XCHG
+      16 s() 18 s() XCHG
+      s15 17 s() XCHG
+      s14 16 s() XCHG
+      s13 s15 XCHG
+      s12 s14 XCHG
+      s11 s13 XCHG
+      s10 s12 XCHG
+      s9 s11 XCHG
+      s8 s10 XCHG
+      s7 s9 XCHG
+      s6 s8 XCHG
+      s5 s7 XCHG
+      s4 s6 XCHG
+      s3 s5 XCHG
+      s4 s0 s3 XCHG3
+      $LotteryDraw$_contract_store INLINECALLDICT
+    }>
+    OVER
+    3151043122 PUSHINT
+    EQUAL
+    IFJMP:<{
+      2DROP
+      s0 23 s() XCHG
+      257 PUSHINT
+      LDIX
+      DROP
+      26163 PUSHINT
+      __tact_context_get_sender INLINECALLDICT
+      24 s() PUSH
+      SDEQ
+      THROWANYIFNOT
+      26571 PUSHINT
+      24 s() PUSH
+      s2 PUSH
+      SUB
+      s3 PUSH
+      GEQ
+      THROWANYIFNOT
+      s1 23 s() XCHG
+      SUB
+      21 s() 23 s() XCHG
+      20 s() 22 s() XCHG
+      19 s() 21 s() XCHG
+      18 s() 20 s() XCHG
+      17 s() 19 s() XCHG
+      16 s() 18 s() XCHG
+      s15 17 s() XCHG
+      s14 16 s() XCHG
+      s13 s15 XCHG
+      s12 s14 XCHG
+      s11 s13 XCHG
+      s10 s12 XCHG
+      s9 s11 XCHG
+      s8 s10 XCHG
+      s7 s9 XCHG
+      s6 s8 XCHG
+      s5 s7 XCHG
+      s4 s6 XCHG
+      s3 s5 XCHG
+      s4 s0 s3 XCHG3
+      $LotteryDraw$_contract_store INLINECALLDICT
+    }>
+    OVER
+    2716683948 PUSHINT
+    EQUAL
+    IFJMP:<{
+      2DROP
+      23 s() POP
+      25826 PUSHINT
+      __tact_context_get_sender INLINECALLDICT
+      SWAP
+      s0 23 s() XCHG
+      SDEQ
+      s1 22 s() XCHG
+      THROWANYIFNOT
+      __tact_context_get_sender INLINECALLDICT
+      s0 23 s() XCHG
+      20 s() 22 s() XCHG
+      19 s() 21 s() XCHG
+      18 s() 20 s() XCHG
+      17 s() 19 s() XCHG
+      16 s() 18 s() XCHG
+      s15 17 s() XCHG
+      s14 16 s() XCHG
+      s13 s15 XCHG
+      s12 s14 XCHG
+      s11 s13 XCHG
+      s10 s12 XCHG
+      s9 s11 XCHG
+      s8 s10 XCHG
+      s7 s9 XCHG
+      s6 s8 XCHG
+      s5 s7 XCHG
+      s4 s6 XCHG
+      s3 s5 XCHG
+      s4 s3 s0 XCHG3
+      s1 s2 XCHG
+      $LotteryDraw$_contract_store INLINECALLDICT
+    }>
+    OVER
+    3276149870 PUSHINT
+    EQUAL
+    IFJMP:<{
+      2DROP
+      s0 23 s() XCHG
+      257 PUSHINT
+      LDIX
+      DROP
+      6531 PUSHINT
+      __tact_context_get_sender INLINECALLDICT
+      24 s() PUSH
+      SDEQ
+      THROWANYIFNOT
+      s1 24 s() XCHG
+      ADD
+      21 s() 23 s() XCHG
+      20 s() 22 s() XCHG
+      19 s() 21 s() XCHG
+      18 s() 20 s() XCHG
+      17 s() 19 s() XCHG
+      16 s() 18 s() XCHG
+      s15 17 s() XCHG
+      s14 16 s() XCHG
+      s13 s15 XCHG
+      s12 s14 XCHG
+      s11 s13 XCHG
+      s10 s12 XCHG
+      s9 s11 XCHG
+      s8 s10 XCHG
+      s7 s9 XCHG
+      s6 s8 XCHG
+      s5 s7 XCHG
+      s4 s6 XCHG
+      s3 s5 XCHG
+      s4 s3 s0 XCHG3
+      s1 s2 XCHG
+      $LotteryDraw$_contract_store INLINECALLDICT
+    }>
+    OVER
+    3840286441 PUSHINT
+    EQUAL
+    IFJMP:<{
+      2DROP
+      s0 23 s() XCHG
+      257 PUSHINT
+      LDIX
+      DROP
+      48981 PUSHINT
+      __tact_context_get_sender INLINECALLDICT
+      24 s() PUSH
+      SDEQ
+      THROWANYIFNOT
+      19684 PUSHINT
+      25 s() PUSH
+      s2 PUSH
+      SUB
+      -1 GTINT
+      THROWANYIFNOT
+      s1 24 s() XCHG
+      SUB
+      21 s() 23 s() XCHG
+      20 s() 22 s() XCHG
+      19 s() 21 s() XCHG
+      18 s() 20 s() XCHG
+      17 s() 19 s() XCHG
+      16 s() 18 s() XCHG
+      s15 17 s() XCHG
+      s14 16 s() XCHG
+      s13 s15 XCHG
+      s12 s14 XCHG
+      s11 s13 XCHG
+      s10 s12 XCHG
+      s9 s11 XCHG
+      s8 s10 XCHG
+      s7 s9 XCHG
+      s6 s8 XCHG
+      s5 s7 XCHG
+      s4 s6 XCHG
+      s3 s5 XCHG
+      s4 s3 s0 XCHG3
+      s1 s2 XCHG
+      $LotteryDraw$_contract_store INLINECALLDICT
+    }>
+    OVER
+    2490013878 PUSHINT
+    EQUAL
+    IFJMP:<{
+      2DROP
+      s0 23 s() XCHG
+      64 LDU
+      DROP
+      $DeployOk$_constructor_queryId INLINECALLDICT
+      NEWC
+      $DeployOk$_store_cell INLINECALLDICT
+      22 s() 24 s() XCHG
+      21 s() 23 s() XCHG
+      20 s() 22 s() XCHG
+      19 s() 21 s() XCHG
+      18 s() 20 s() XCHG
+      17 s() 19 s() XCHG
+      16 s() 18 s() XCHG
+      s15 17 s() XCHG
+      s14 16 s() XCHG
+      s13 s15 XCHG
+      s12 s14 XCHG
+      s11 s13 XCHG
+      s10 s12 XCHG
+      s9 s11 XCHG
+      s8 s10 XCHG
+      s7 s9 XCHG
+      s6 s8 XCHG
+      s5 s7 XCHG
+      s4 s6 XCHG
+      s3 s5 XCHG
+      s4 s3 s0 XCHG3
+      s1 s2 XCHG
+      $LotteryDraw$_fun_notify INLINECALLDICT
+      $LotteryDraw$_contract_store INLINECALLDICT
+    }>
+    25 s() POP
+    0 EQINT
+    s0 24 s() XCHG
+    33 LESSINT
+    s1 24 s() XCHG
+    AND
+    IFJMP:<{
+      21 s() 23 s() XCHG
+      20 s() 22 s() XCHG
+      19 s() 21 s() XCHG
+      18 s() 20 s() XCHG
+      17 s() 19 s() XCHG
+      16 s() 18 s() XCHG
+      s15 17 s() XCHG
+      s14 16 s() XCHG
+      s13 s15 XCHG
+      2 13 BLKSWAP
+      $LotteryDraw$_contract_store INLINECALLDICT
+    }>
+    15 BLKDROP
+    9 BLKDROP
+    130 THROW
+  }>
+}END>c
