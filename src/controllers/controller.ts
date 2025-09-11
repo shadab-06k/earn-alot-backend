@@ -5,13 +5,22 @@ import logger from "../common/logger";
 import {
   getTicketCollection,
   getUserCollection,
+  getReferralCollection,
   TicketDoc,
   UserDoc,
+  ReferralDoc,
 } from "../models/userModel"; // adjust path if needed
 import { getPoolCollection } from "../models/poolModel";
 import { getClient } from "../connections/connections";
 import type { WithId } from "mongodb";
 import { randomUUID } from "crypto";
+import { 
+  calculatePointsForReferral, 
+  calculateTotalPointsEarned, 
+  getPointsSummary,
+  extractReferralCode,
+  isValidReferralCode 
+} from "../utility/pointsHelper";
 interface AuthPayload {
   telegramId: string;
   userName: string;
@@ -420,6 +429,212 @@ const getAllUsers = async (req: Request, res: Response) => {
   }
 };
 
+
+
+export const referral = async (req: Request, res: Response) => {
+  try {
+    const authed = (req as any).user as AuthPayload | undefined;
+    if (!authed) return res.status(401).json({ error: "Unauthorized" });
+    
+    const { referralCode } = req.body;
+
+    // Validate referral code format
+    if (!isValidReferralCode(referralCode)) {
+      return res.status(400).json({ message: "Invalid referral code format" });
+    }
+
+    const client = await getClient();
+    const db = client.db(process.env.DB_NAME);
+    const userCollection = getUserCollection(db);
+    const referralCollection = getReferralCollection(db);
+    
+    // Find the referrer user by matching the last 12 digits of uniqueID
+    const referrerUser = await userCollection.findOne({ 
+      uniqueID: { $regex: `${referralCode}$` } 
+    });
+    
+    if(!referrerUser){
+      return res.status(404).json({ message: "User with this referral code not found" });
+    }
+
+    // Check if current user is trying to refer themselves
+    if (referrerUser.uniqueID === authed.uniqueID) {
+      return res.status(400).json({ message: "Cannot refer yourself" });
+    }
+
+    // Check if this referral already exists
+    const existingReferral = await referralCollection.findOne({
+      userId: authed.uniqueID,
+      referralCode: referralCode
+    });
+
+    if (existingReferral) {
+      return res.status(400).json({ message: "You have already used this referral code" });
+    }
+
+    // Get referrer's current referral count to calculate points
+    const referrerReferrals = await referralCollection.find({ 
+      referrerUserId: referrerUser.uniqueID 
+    }).toArray();
+    
+    const currentReferralCount = referrerReferrals.length;
+    const nextReferralCount = currentReferralCount + 1;
+    
+    // Calculate points for this referral
+    const pointsCalculation = calculatePointsForReferral(nextReferralCount);
+    
+    const referralData: ReferralDoc = {
+      referralCode: referralCode, // The referrer's code
+      points: pointsCalculation.points,
+      userId: authed.uniqueID, // The user who is being referred
+      referrerUserId: referrerUser.uniqueID, // The user who referred
+      referrerWalletAddress: referrerUser.walletAddress,
+      referrerUserName: referrerUser.userName,
+      referrerTelegramId: referrerUser.telegramId,
+      walletAddress: authed.walletAddress,
+      userName: authed.userName,
+      telegramId: authed.telegramId,
+      createdAt: new Date(),
+    };
+
+    // Save referral data to database
+    await referralCollection.insertOne(referralData);
+
+    // Get updated points summary for the referrer
+    const pointsSummary = getPointsSummary(nextReferralCount);
+
+    // Send response to the referrer (the person who shared the link)
+    // We need to get the referrer's JWT token or send notification to them
+    // For now, we'll return success to the referred user but log the referrer's info
+    
+    res.status(200).json({ 
+      message: "Referral used successfully", 
+      success: true,
+      referredUser: {
+        userName: authed.userName,
+        uniqueID: authed.uniqueID
+      },
+      referrerUser: {
+        userName: referrerUser.userName,
+        uniqueID: referrerUser.uniqueID,
+        referralCode: referralCode
+      },
+      pointsEarnedByReferrer: pointsCalculation.points,
+      referrerTotalPoints: pointsCalculation.totalPoints
+    });
+  } catch (error) {
+    console.error("Error in referral API:", error);
+    logger.error("Error in referral API", { error });
+    res.status(500).json({ 
+      message: "Internal Server Error",
+      error: error instanceof Error ? error.message : "Unknown error"
+    });
+  }
+}
+
+
+export const getReferalData = async (req: Request, res: Response) => {
+  try {
+    const authed = (req as any).user as AuthPayload | undefined;
+    if (!authed) return res.status(401).json({ error: "Unauthorized" });
+    
+    const client = await getClient();
+    const db = client.db(process.env.DB_NAME);
+    const userCollection = getUserCollection(db);
+    const referralCollection = getReferralCollection(db);
+    const ticketCollection = getTicketCollection(db);
+    
+    // Get the last 12 digits from the authenticated user's uniqueID
+    const userReferralCode = authed.uniqueID.slice(-12);
+    
+    // Find all referral records where this user shared the link (earned points)
+    const referralRecords = await referralCollection.find({ 
+      userId: authed.uniqueID 
+    }).toArray();
+    
+    // Also find referrals where this user used someone's link (to show who referred them)
+    const referredByRecords = await referralCollection.find({ 
+      referrerUserId: authed.uniqueID 
+    }).toArray();
+    
+    // Get details of users who used this user's referral code
+    const referredUsers = [];
+    
+    for (const record of referralRecords) {
+      // Find the user who used this user's referral code
+      const referredUser = await userCollection.findOne({ 
+        uniqueID: record.referrerUserId 
+      });
+      
+      if (referredUser) {
+        // Check if this user has made at least one lottery purchase
+        const hasPurchased = await ticketCollection.findOne({ 
+          userId: referredUser.uniqueID 
+        });
+        
+        referredUsers.push({
+          userName: referredUser.userName,
+          uniqueID: referredUser.uniqueID,
+          walletAddress: referredUser.walletAddress,
+          telegramId: referredUser.telegramId,
+          joinedAt: referredUser.createdAt,
+          hasPurchasedLottery: !!hasPurchased,
+          pointsEarned: record.points,
+          referralDate: record.createdAt
+        });
+      }
+    }
+    
+    // Calculate total points earned using points helper
+    const totalReferrals = referredUsers.length;
+    const pointsSummary = getPointsSummary(totalReferrals);
+    
+    // Get who referred this user
+    let referredByUser = null;
+    if (referredByRecords.length > 0) {
+      const referrerRecord = referredByRecords[0]; // Get the first referral record
+      referredByUser = {
+        userName: referrerRecord.userName,
+        uniqueID: referrerRecord.userId,
+        referralCode: referrerRecord.referralCode
+      };
+    }
+    
+    res.status(200).json({ 
+      message: "Referral data fetched successfully", 
+      data: {
+        currentUser: {
+          userName: authed.userName,
+          uniqueID: authed.uniqueID,
+          referralCode: userReferralCode,
+          referralLink: `https://t.me/earn_alot_bot/${userReferralCode}`,
+          totalPoints: pointsSummary.totalPointsEarned,
+          totalReferrals: totalReferrals
+        },
+        // referredByUser: referredByUser, // Who referred this user
+        referredUsers: referredUsers.map(user => ({
+          referredUser: {
+            userName: user.userName,
+            uniqueID: user.uniqueID,
+            totalPoints: 0
+          },
+          // referrerUser: {
+          //   userName: authed.userName,
+          //   uniqueID: authed.uniqueID,
+          //   referralCode: userReferralCode,
+          //   totalPoints: user.pointsEarned
+          // }
+        }))
+      }
+    });
+  } catch (error) {
+    logger.error("Error in getReferalData API", { error });
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+}
+
+
+
 // export const getUniqueUser = async (req: Request, res: Response) => {
 //   try {
 //     // authMiddleware should set req.user from the verified JWT
@@ -447,4 +662,4 @@ const getAllUsers = async (req: Request, res: Response) => {
 //   }
 // };
 
-export default { login, buyTicket, getMyTickets, getPoolTickets, getAllUsers };
+export default { login, buyTicket, getMyTickets, getPoolTickets, getAllUsers, referral, getReferalData };

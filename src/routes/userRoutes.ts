@@ -16,5 +16,9 @@ router.post("/buy-ticket", authMiddleware, controller.buyTicket);
 router.get("/user-tickets", authMiddleware, controller.getMyTickets);
 router.get("/get-all-users", controller.getAllUsers);
 // router.get("/users", controller.getAllUsers);
+//for referral system
+
+router.post("/send-referral", authMiddleware, controller.referral);
+router.get("/get-referral-data", authMiddleware, controller.getReferalData);
 
 export default router;

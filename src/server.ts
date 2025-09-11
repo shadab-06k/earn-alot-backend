@@ -8,6 +8,10 @@ import lotteryRoutes from './routes/lottery'
 import { getClient } from "./connections/connections";
 import morgan from 'morgan';
 import commonMiddleware from './middleware/commonmiddleware';
+import { startBot, stopBot } from './utility/bot';
+import { Context, Telegraf } from "telegraf";
+import { Message } from "telegraf/typings/core/types/typegram";
+
 
 
 
@@ -36,11 +40,50 @@ app.get("/", (req: any, res: any, next: any) => {
   res.send("Welcome to Earn Alot Tg Mini App Backend");
 });
 
+console.log("🚀 Initializing bot & server...");
+const BOT_TOKEN:any = process.env.BOT_TOKEN;
+const bot = new Telegraf(BOT_TOKEN);
+const WEB_APP_URL:any = "https://earn-alot-web-app.vercel.app/";
+
+// ✅ Initialize Telegram bot
+bot.help((ctx: Context) => {
+    ctx.reply('This is a help message.');
+});
+
+bot.launch().then(() => console.log('Bot started!')).catch((err) => console.error('Bot failed to start', err));
+
+
+// ✅ Properly Extract Payload from /start Command
+bot.start((ctx: Context) => {
+    console.log("📩 Received /start command");
+
+    // ✅ Ensure ctx.message is a text message before accessing `text`
+    const message = ctx.message as Message.TextMessage | undefined;
+    const messageText = message?.text || ""; // Extract text safely
+    const startPayload = messageText.split(" ")[1] || ""; // Extract text after `/start`
+    console.log('startPayload==>>',startPayload)
+
+    if (startPayload === "webapp") {
+        ctx.reply("🚀 Open Your Earn Alot APP Now", {
+            reply_markup: {
+                inline_keyboard: [[{ text: "🚀 Open Earn Alot App", web_app: { url: WEB_APP_URL } }]],
+            },
+        });
+    } else {
+        ctx.reply("Welcome! Open Your Earn Alot APP Now", {
+            reply_markup: {
+                inline_keyboard: [[{ text: "🚀 Open App", web_app: { url: WEB_APP_URL } }]],
+            },
+        });
+    }
+});
+
+
 async function startServer() {
     try {
         await getClient();
         logger.info("✅ Successfully connected to the database");
-
+        
         app.listen(PORT, () => {
             logger.info(`✅ Server is running on http://localhost:${PORT}`);
         });
