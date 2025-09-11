@@ -31,7 +31,7 @@ let client: MongoClient | null = null;
 export const getClient = async (): Promise<MongoClient> =>{
   if (client) return client;
   try {
-    client = new MongoClient(uri);
+    client = new MongoClient(url);
     await client.connect();
     return client;
   } catch (error) {
