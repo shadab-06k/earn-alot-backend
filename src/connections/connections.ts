@@ -21,8 +21,9 @@ import logger from '../common/logger';
 dotenv.config();
 
 
-const uri = process.env.MONGO_URI || 'mongodb://localhost:27017';
+// const uri = process.env.MONGO_URI || 'mongodb://localhost:27017';
 
+const url = process.env.MONGO_URL || "mongodb+srv://ShadabK:Shadab%40123@cluster0.xehzuze.mongodb.net/earn-alot?retryWrites=true&w=majority&appName=Cluster0";
 
 let client: MongoClient | null = null;
 
