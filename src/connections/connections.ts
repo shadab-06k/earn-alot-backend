@@ -23,7 +23,8 @@ dotenv.config();
 
 // const uri = process.env.MONGO_URI || 'mongodb://localhost:27017';
 
-const url = process.env.MONGO_URL || "mongodb+srv://ShadabK:Shadab%40123@cluster0.xehzuze.mongodb.net/earn-alot?retryWrites=true&w=majority&appName=Cluster0";
+const url = process.env.MONGO_URL
+console.log("url", url);
 
 let client: MongoClient | null = null;
 
@@ -31,7 +32,8 @@ let client: MongoClient | null = null;
 export const getClient = async (): Promise<MongoClient> =>{
   if (client) return client;
   try {
-    client = new MongoClient(url);
+    client = new MongoClient(url as string);
+    
     await client.connect();
     return client;
   } catch (error) {
