@@ -536,95 +536,81 @@ export const referral = async (req: Request, res: Response) => {
 export const getReferalData = async (req: Request, res: Response) => {
   try {
     const authed = (req as any).user as AuthPayload | undefined;
+    console.log("authed", authed?.uniqueID);
     if (!authed) return res.status(401).json({ error: "Unauthorized" });
     
     const client = await getClient();
     const db = client.db(process.env.DB_NAME);
-    const userCollection = getUserCollection(db);
     const referralCollection = getReferralCollection(db);
-    const ticketCollection = getTicketCollection(db);
     
-    // Get the last 12 digits from the authenticated user's uniqueID
-    const userReferralCode = authed.uniqueID.slice(-12);
+    console.log("Database name:", process.env.DB_NAME);
+    console.log("Collection name: referrals");
     
-    // Find all referral records where this user shared the link (earned points)
-    const referralRecords = await referralCollection.find({ 
+    // List all collections in the database
+    const collections = await db.listCollections().toArray();
+    console.log("Available collections:", collections.map(c => c.name));
+    
+    // Find referral record where current user was referred (userId matches current user)
+    console.log("Looking for referral record with userId:", authed.uniqueID);
+    
+    const referralRecord = await referralCollection.findOne({ 
       userId: authed.uniqueID 
-    }).toArray();
+    });
     
-    // Also find referrals where this user used someone's link (to show who referred them)
-    const referredByRecords = await referralCollection.find({ 
-      referrerUserId: authed.uniqueID 
-    }).toArray();
+    console.log("referralRecord", referralRecord);
     
-    // Get details of users who used this user's referral code
-    const referredUsers = [];
-    
-    for (const record of referralRecords) {
-      // Find the user who used this user's referral code
-      const referredUser = await userCollection.findOne({ 
-        uniqueID: record.referrerUserId 
-      });
+    // If not found, let's check what records exist
+    if (!referralRecord) {
+      const allRecords = await referralCollection.find({}).toArray();
+      console.log("All referral records in database:", allRecords);
       
-      if (referredUser) {
-        // Check if this user has made at least one lottery purchase
-        const hasPurchased = await ticketCollection.findOne({ 
-          userId: referredUser.uniqueID 
-        });
-        
-        referredUsers.push({
-          userName: referredUser.userName,
-          uniqueID: referredUser.uniqueID,
-          walletAddress: referredUser.walletAddress,
-          telegramId: referredUser.telegramId,
-          joinedAt: referredUser.createdAt,
-          hasPurchasedLottery: !!hasPurchased,
-          pointsEarned: record.points,
-          referralDate: record.createdAt
-        });
-      }
+      // Check if there's a record with referrerUserId matching current user
+      const referrerRecord = await referralCollection.findOne({ 
+        referrerUserId: authed.uniqueID 
+      });
+      console.log("Record where current user is referrer:", referrerRecord);
     }
     
-    // Calculate total points earned using points helper
-    const totalReferrals = referredUsers.length;
-    const pointsSummary = getPointsSummary(totalReferrals);
-    
-    // Get who referred this user
-    let referredByUser = null;
-    if (referredByRecords.length > 0) {
-      const referrerRecord = referredByRecords[0]; // Get the first referral record
-      referredByUser = {
-        userName: referrerRecord.userName,
-        uniqueID: referrerRecord.userId,
-        referralCode: referrerRecord.referralCode
-      };
+    if (!referralRecord) {
+      return res.status(200).json({ 
+        message: "No referral data found", 
+        data: {
+          currentUser: {
+            userName: authed.userName,
+            uniqueID: authed.uniqueID,
+            walletAddress: authed.walletAddress,
+            telegramId: authed.telegramId,
+            referralCode: null,
+            points: 0
+          },
+          referredUsers: []
+        }
+      });
     }
+    
+    // Get current user data from referral record
+    const currentUserData = {
+      userName: referralRecord.userName,
+      uniqueID: referralRecord.userId,
+      walletAddress: referralRecord.walletAddress,
+      telegramId: referralRecord.telegramId,
+      referralCode: referralRecord.referralCode,
+      points: referralRecord.points
+    };
+    
+    // Get referrer data (who referred the current user)
+    const referredUsers = [{
+      referrerUserId: referralRecord.referrerUserId,
+      referrerWalletAddress: referralRecord.referrerWalletAddress,
+      referrerUserName: referralRecord.referrerUserName,
+      referrerTelegramId: referralRecord.referrerTelegramId
+    }];
     
     res.status(200).json({ 
       message: "Referral data fetched successfully", 
       data: {
-        currentUser: {
-          userName: authed.userName,
-          uniqueID: authed.uniqueID,
-          referralCode: userReferralCode,
-          referralLink: `https://t.me/earn_alot_bot/${userReferralCode}`,
-          totalPoints: pointsSummary.totalPointsEarned,
-          totalReferrals: totalReferrals
-        },
-        // referredByUser: referredByUser, // Who referred this user
-        referredUsers: referredUsers.map(user => ({
-          referredUser: {
-            userName: user.userName,
-            uniqueID: user.uniqueID,
-            totalPoints: 0
-          },
-          // referrerUser: {
-          //   userName: authed.userName,
-          //   uniqueID: authed.uniqueID,
-          //   referralCode: userReferralCode,
-          //   totalPoints: user.pointsEarned
-          // }
-        }))
+        currentUser: currentUserData,
+        referredUsers: referredUsers
       }
     });
   } catch (error) {
