@@ -43,7 +43,8 @@ app.get("/", (req: any, res: any, next: any) => {
 console.log("🚀 Initializing bot & server...");
 const BOT_TOKEN:any = process.env.BOT_TOKEN;
 const bot = new Telegraf(BOT_TOKEN);
-const WEB_APP_URL:any = "https://earn-alot-web-app.vercel.app/";
+// const WEB_APP_URL:any = "https://earn-alot-web-app.vercel.app/";
+const WEB_APP_URL:any = "https://app.earnalot.io/";
 
 // ✅ Initialize Telegram bot
 bot.help((ctx: Context) => {
