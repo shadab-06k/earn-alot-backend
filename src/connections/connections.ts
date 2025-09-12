@@ -24,7 +24,7 @@ dotenv.config();
 // const uri = process.env.MONGO_URI || 'mongodb://localhost:27017';
 
 const url = process.env.MONGO_URL
-console.log("url", url);
+// console.log("url", url);
 
 let client: MongoClient | null = null;
 
