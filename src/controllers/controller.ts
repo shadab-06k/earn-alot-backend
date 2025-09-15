@@ -287,7 +287,7 @@ export const buyTicket = async (req: Request, res: Response) => {
       // jackpot: jackpot ?? "10000",
       duration: String(duration),
       endsIn: String(endsIn),
-      lotteriesPurchased:lotteriesPurchased|| 0,
+      lotteriesPurchased: Number(lotteriesPurchased) || 0,
       poolAmount: Number(poolAmount) || 0,
       title: title || "No Title", 
       transactionHash:transactionHash,

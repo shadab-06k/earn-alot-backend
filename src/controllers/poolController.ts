@@ -176,7 +176,7 @@ export const getAllPools = async (req: Request, res: Response) => {
     const poolsWithTicketInfo = await Promise.all(
       pools.map(async (pool) => {
         const ticketRecords = await Tickets.find({ poolId: pool.poolId }).toArray();
-        const ticketsPurchased = ticketRecords.reduce((sum, ticket) => sum + (ticket.lotteriesPurchased || 0), 0);
+        const ticketsPurchased = ticketRecords.reduce((sum, ticket) => sum + (Number(ticket.lotteriesPurchased) || 0), 0);
         const remainingTickets = pool.maxTicket - ticketsPurchased;
         
         return {
@@ -217,7 +217,7 @@ export const getPoolById = async (req: Request, res: Response) => {
 
     // Add ticket count information
     const ticketRecords = await Tickets.find({ poolId: pool.poolId }).toArray();
-    const ticketsPurchased = ticketRecords.reduce((sum, ticket) => sum + (ticket.lotteriesPurchased || 0), 0);
+    const ticketsPurchased = ticketRecords.reduce((sum, ticket) => sum + (Number(ticket.lotteriesPurchased) || 0), 0);
     const remainingTickets = pool.maxTicket - ticketsPurchased;
 
     const poolWithTicketInfo = {
