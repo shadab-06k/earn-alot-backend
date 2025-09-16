@@ -4,7 +4,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getReferalData = exports.referral = exports.getMyTickets = exports.getPoolTickets = exports.buyTicket = exports.login = void 0;
-const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const logger_1 = __importDefault(require("../common/logger"));
 const userModel_1 = require("../models/userModel"); // adjust path if needed
@@ -146,16 +145,14 @@ const login = async (req, res) => {
         else {
             await Users.updateOne({ _id: user._id }, { $set: { updatedAt: new Date() } });
         }
-        // Token with exactly 4 claims
-        const token = jsonwebtoken_1.default.sign({
-            telegramId: user.telegramId,
-            userName: user.userName,
-            uniqueID: user.uniqueID,
-            walletAddress: user.walletAddress,
-        }, process.env.JWT_SECRET);
         return res.status(200).json({
             message: "Login successful",
-            AuthToken: token,
+            user: {
+                userName: user.userName,
+                uniqueID: user.uniqueID,
+                walletAddress: user.walletAddress,
+                telegramId: user.telegramId
+            }
         });
     }
     catch (error) {
@@ -164,17 +161,22 @@ const login = async (req, res) => {
     }
 };
 exports.login = login;
-// POST /buy-ticket  (Auth required)
-// Body: everything EXCEPT the 4 token fields: { lotteryNumbers, maxBetAmount, jackpot, duration, endsIn, poolAmount, date }
+// POST /buy-ticket  (Wallet address in header required)
+// Body: everything EXCEPT the wallet address: { lotteryNumbers, maxBetAmount, jackpot, duration, endsIn, poolAmount, date }
 const buyTicket = async (req, res) => {
     try {
-        // derive user from JWT
-        // const authed = req.user;
-        const authed = req.user;
-        console.log("authed", authed);
-        if (!authed)
-            return res.status(401).json({ error: "Unauthorized" });
-        const { contractAddress, transactionHash, walletAddress, telegramId, userName, lotteryNumbers, poolId, lotteriesPurchased, maxBetAmount, 
+        // Get wallet address from header
+        const walletAddress = req.headers['wallet-address'];
+        if (!walletAddress)
+            return res.status(401).json({ error: "Wallet address required in header" });
+        // Get user from database using wallet address
+        const client = await (0, connections_1.getClient)();
+        const db = client.db(process.env.DB_NAME);
+        const Users = (0, userModel_1.getUserCollection)(db);
+        const user = await Users.findOne({ walletAddress });
+        if (!user)
+            return res.status(404).json({ error: "User not found" });
+        const { contractAddress, transactionHash, lotteryNumbers, poolId, lotteriesPurchased, maxBetAmount, 
         // jackpot,
         duration, endsIn, poolAmount, title, date,
         // optional: poolId, idempotencyKey
@@ -182,9 +184,6 @@ const buyTicket = async (req, res) => {
         const missing = [
             ["contractAddress", contractAddress],
             ["transactionHash", transactionHash],
-            ["walletAddress", walletAddress],
-            ["telegramId", telegramId],
-            ["userName", userName],
             ["lotteryNumbers", lotteryNumbers],
             ["lotteriesPurchased", lotteriesPurchased],
             ["maxBetAmount", maxBetAmount],
@@ -204,16 +203,14 @@ const buyTicket = async (req, res) => {
                 .status(400)
                 .json({ error: `Missing or empty fields: ${missing.join(", ")}` });
         }
-        const client = await (0, connections_1.getClient)();
-        const db = client.db(process.env.DB_NAME);
         const Tickets = (0, userModel_1.getTicketCollection)(db);
         const ticket = {
             ticketId: (0, crypto_1.randomUUID)(),
             contractAddress: contractAddress,
-            userId: authed.uniqueID,
-            walletAddress: authed.walletAddress,
-            userName: authed.userName,
-            telegramId: authed.telegramId,
+            userId: user.uniqueID,
+            walletAddress: user.walletAddress,
+            userName: user.userName,
+            telegramId: user.telegramId,
             lotteryNumbers: Array.isArray(lotteryNumbers)
                 ? lotteryNumbers
                 : [lotteryNumbers],
@@ -237,7 +234,7 @@ const buyTicket = async (req, res) => {
         }
         // Count current tickets for this pool (sum of lotteriesPurchased)
         const ticketRecords = await Tickets.find({ poolId: poolId }).toArray();
-        const ticketsInPool = ticketRecords.reduce((sum, ticket) => sum + (ticket.lotteriesPurchased || 0), 0);
+        const ticketsInPool = ticketRecords.reduce((sum, ticket) => sum + (Number(ticket.lotteriesPurchased) || 0), 0);
         const remainingTickets = pool.maxTicket - ticketsInPool;
         // Check if there are enough tickets remaining
         const ticketsToPurchase = Number(lotteriesPurchased) || 1;
@@ -252,7 +249,7 @@ const buyTicket = async (req, res) => {
         const ins = await Tickets.insertOne(ticket);
         // Recalculate after insertion
         const updatedTicketRecords = await Tickets.find({ poolId: poolId }).toArray();
-        const updatedTicketsInPool = updatedTicketRecords.reduce((sum, ticket) => sum + (ticket.lotteriesPurchased || 0), 0);
+        const updatedTicketsInPool = updatedTicketRecords.reduce((sum, ticket) => sum + (Number(ticket.lotteriesPurchased) || 0), 0);
         const updatedRemainingTickets = pool.maxTicket - updatedTicketsInPool;
         return res.status(200).json({
             message: "Ticket purchased successfully",
@@ -307,24 +304,23 @@ const getPoolTickets = async (req, res) => {
     }
 };
 exports.getPoolTickets = getPoolTickets;
-// GET /tickets/mine  (Auth required)
-// Returns all tickets for walletAddress in the JWT + a convenience array of only the lottery numbers arrays.
+// GET /tickets/mine  (Wallet address in header required)
+// Returns all tickets for walletAddress in the header + a convenience array of only the lottery numbers arrays.
 const getMyTickets = async (req, res) => {
     try {
-        // const authed = req.user;
-        // if (!authed) return res.status(401).json({ error: "Unauthorized" });
-        const authed = req.user;
-        if (!authed)
-            return res.status(401).json({ error: "Unauthorized" });
+        // Get wallet address from header
+        const walletAddress = req.headers['wallet-address'];
+        if (!walletAddress)
+            return res.status(401).json({ error: "Wallet address required in header" });
         const client = await (0, connections_1.getClient)();
         const db = client.db(process.env.DB_NAME);
         const Tickets = (0, userModel_1.getTicketCollection)(db);
-        const tickets = await Tickets.find({ walletAddress: authed.walletAddress })
+        const tickets = await Tickets.find({ walletAddress })
             .sort({ purchasedAt: -1 })
             .toArray();
         const lotteryNumbers = tickets.map((t) => t.lotteryNumbers);
         return res.status(200).json({
-            walletAddress: authed.walletAddress,
+            walletAddress: walletAddress,
             count: tickets.length,
             lotteryNumbers, // just the arrays
             tickets, // full docs
@@ -353,9 +349,10 @@ const getAllUsers = async (req, res) => {
 };
 const referral = async (req, res) => {
     try {
-        const authed = req.user;
-        if (!authed)
-            return res.status(401).json({ error: "Unauthorized" });
+        // Get wallet address from header
+        const walletAddress = req.headers['wallet-address'];
+        if (!walletAddress)
+            return res.status(401).json({ error: "Wallet address required in header" });
         const { referralCode } = req.body;
         // Validate referral code format
         if (!(0, pointsHelper_1.isValidReferralCode)(referralCode)) {
@@ -365,20 +362,25 @@ const referral = async (req, res) => {
         const db = client.db(process.env.DB_NAME);
         const userCollection = (0, userModel_1.getUserCollection)(db);
         const referralCollection = (0, userModel_1.getReferralCollection)(db);
-        // Find the referrer user by matching the last 12 digits of uniqueID
+        // Get current user from wallet address
+        const currentUser = await userCollection.findOne({ walletAddress });
+        if (!currentUser) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        // Find the referrer user by matching the last 12 digits of wallet address
         const referrerUser = await userCollection.findOne({
-            uniqueID: { $regex: `${referralCode}$` }
+            walletAddress: { $regex: `${referralCode}$` }
         });
         if (!referrerUser) {
             return res.status(404).json({ message: "User with this referral code not found" });
         }
         // Check if current user is trying to refer themselves
-        if (referrerUser.uniqueID === authed.uniqueID) {
+        if (referrerUser.walletAddress === currentUser.walletAddress) {
             return res.status(400).json({ message: "Cannot refer yourself" });
         }
         // Check if this referral already exists
         const existingReferral = await referralCollection.findOne({
-            userId: authed.uniqueID,
+            userId: currentUser.uniqueID,
             referralCode: referralCode
         });
         if (existingReferral) {
@@ -395,33 +397,32 @@ const referral = async (req, res) => {
         const referralData = {
             referralCode: referralCode, // The referrer's code
             points: pointsCalculation.points,
-            userId: authed.uniqueID, // The user who is being referred
+            userId: currentUser.uniqueID, // The user who is being referred
             referrerUserId: referrerUser.uniqueID, // The user who referred
             referrerWalletAddress: referrerUser.walletAddress,
             referrerUserName: referrerUser.userName,
             referrerTelegramId: referrerUser.telegramId,
-            walletAddress: authed.walletAddress,
-            userName: authed.userName,
-            telegramId: authed.telegramId,
+            walletAddress: currentUser.walletAddress,
+            userName: currentUser.userName,
+            telegramId: currentUser.telegramId,
             createdAt: new Date(),
         };
         // Save referral data to database
         await referralCollection.insertOne(referralData);
         // Get updated points summary for the referrer
         const pointsSummary = (0, pointsHelper_1.getPointsSummary)(nextReferralCount);
-        // Send response to the referrer (the person who shared the link)
-        // We need to get the referrer's JWT token or send notification to them
-        // For now, we'll return success to the referred user but log the referrer's info
         res.status(200).json({
             message: "Referral used successfully",
             success: true,
             referredUser: {
-                userName: authed.userName,
-                uniqueID: authed.uniqueID
+                userName: currentUser.userName,
+                uniqueID: currentUser.uniqueID,
+                walletAddress: currentUser.walletAddress
             },
             referrerUser: {
                 userName: referrerUser.userName,
                 uniqueID: referrerUser.uniqueID,
+                walletAddress: referrerUser.walletAddress,
                 referralCode: referralCode
             },
             pointsEarnedByReferrer: pointsCalculation.points,
@@ -440,44 +441,35 @@ const referral = async (req, res) => {
 exports.referral = referral;
 const getReferalData = async (req, res) => {
     try {
-        const authed = req.user;
-        console.log("authed", authed?.uniqueID);
-        if (!authed)
-            return res.status(401).json({ error: "Unauthorized" });
+        // Get wallet address from header
+        const walletAddress = req.headers['wallet-address'];
+        if (!walletAddress)
+            return res.status(401).json({ error: "Wallet address required in header" });
         const client = await (0, connections_1.getClient)();
         const db = client.db(process.env.DB_NAME);
+        const userCollection = (0, userModel_1.getUserCollection)(db);
         const referralCollection = (0, userModel_1.getReferralCollection)(db);
-        console.log("Database name:", process.env.DB_NAME);
-        console.log("Collection name: referrals");
-        // List all collections in the database
-        const collections = await db.listCollections().toArray();
-        console.log("Available collections:", collections.map(c => c.name));
-        // Find referral record where current user was referred (userId matches current user)
-        console.log("Looking for referral record with userId:", authed.uniqueID);
-        const referralRecord = await referralCollection.findOne({
-            userId: authed.uniqueID
-        });
-        console.log("referralRecord", referralRecord);
-        // If not found, let's check what records exist
-        if (!referralRecord) {
-            const allRecords = await referralCollection.find({}).toArray();
-            console.log("All referral records in database:", allRecords);
-            // Check if there's a record with referrerUserId matching current user
-            const referrerRecord = await referralCollection.findOne({
-                referrerUserId: authed.uniqueID
-            });
-            console.log("Record where current user is referrer:", referrerRecord);
+        // Get current user from wallet address
+        const currentUser = await userCollection.findOne({ walletAddress });
+        if (!currentUser) {
+            return res.status(404).json({ message: "User not found" });
         }
+        // Find referral record where current user was referred (userId matches current user)
+        const referralRecord = await referralCollection.findOne({
+            userId: currentUser.uniqueID
+        });
         if (!referralRecord) {
+            // Get user's referral code (last 12 digits of wallet address)
+            const userReferralCode = walletAddress.slice(-12);
             return res.status(200).json({
                 message: "No referral data found",
                 data: {
                     currentUser: {
-                        userName: authed.userName,
-                        uniqueID: authed.uniqueID,
-                        walletAddress: authed.walletAddress,
-                        telegramId: authed.telegramId,
-                        referralCode: null,
+                        userName: currentUser.userName,
+                        uniqueID: currentUser.uniqueID,
+                        walletAddress: currentUser.walletAddress,
+                        telegramId: currentUser.telegramId,
+                        referralCode: userReferralCode,
                         points: 0
                     },
                     referredUsers: []

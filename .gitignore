@@ -1,2 +1,16 @@
 node_modules
 .env
+
+# Contract files and folders
+src/contracts/
+contracts/
+*.tact
+*.fc
+*.fif
+*.boc
+*.pkg
+*.md
+*.ts
+*.abi
+*.code.boc
+

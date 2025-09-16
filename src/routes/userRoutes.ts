@@ -12,13 +12,13 @@ router.get("/health", (req, res) => {
 });
 
 router.post("/login", controller.login);
-router.post("/buy-ticket", authMiddleware, controller.buyTicket);
-router.get("/user-tickets", authMiddleware, controller.getMyTickets);
+router.post("/buy-ticket", controller.buyTicket);
+router.get("/user-tickets", controller.getMyTickets);
 router.get("/get-all-users", controller.getAllUsers);
 // router.get("/users", controller.getAllUsers);
 //for referral system
 
-router.post("/send-referral", authMiddleware, controller.referral);
-router.get("/get-referral-data", authMiddleware, controller.getReferalData);
+router.post("/send-referral", controller.referral);
+router.get("/get-referral-data", controller.getReferalData);
 
 export default router;
