@@ -144,7 +144,7 @@ const getAllPools = async (req, res) => {
         const db = client.db(process.env.DB_NAME);
         const Pools = (0, poolModel_1.getPoolCollection)(db);
         const Tickets = (0, userModel_1.getTicketCollection)(db);
-        const pools = await Pools.find({ status: 'ongoing' })
+        const pools = await Pools.find({})
             .sort({ createdAt: -1 })
             .toArray();
         // Add ticket count information to each pool
@@ -156,13 +156,17 @@ const getAllPools = async (req, res) => {
                 ...pool,
                 ticketsPurchased,
                 remainingTickets,
-                isFull: remainingTickets <= 0
+                isFull: remainingTickets <= 0,
+                isOngoing: pool.status === 'ongoing',
+                isCompleted: pool.status === 'completed'
             };
         }));
         return res.status(200).json({
-            message: "Pools fetched successfully",
+            message: "All pools fetched successfully",
             pools: poolsWithTicketInfo,
-            count: poolsWithTicketInfo.length
+            count: poolsWithTicketInfo.length,
+            ongoingCount: poolsWithTicketInfo.filter(pool => pool.status === 'ongoing').length,
+            completedCount: poolsWithTicketInfo.filter(pool => pool.status === 'completed').length
         });
     }
     catch (error) {

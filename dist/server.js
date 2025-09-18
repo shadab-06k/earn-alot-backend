@@ -14,6 +14,7 @@ const connections_1 = require("./connections/connections");
 const morgan_1 = __importDefault(require("morgan"));
 const commonmiddleware_1 = __importDefault(require("./middleware/commonmiddleware"));
 const telegraf_1 = require("telegraf");
+const cronJob_1 = __importDefault(require("./services/cronJob"));
 const app = express();
 const PORT = process.env.PORT;
 // Middleware
@@ -71,6 +72,10 @@ async function startServer() {
     try {
         await (0, connections_1.getClient)();
         logger_1.default.info("✅ Successfully connected to the database");
+        // Initialize and start cron job service
+        const cronJobService = new cronJob_1.default();
+        await cronJobService.startCronJob();
+        logger_1.default.info("✅ Cron job service started");
         app.listen(PORT, '127.0.0.1', () => {
             logger_1.default.info(`✅ Server is running on http://localhost:${PORT}`);
         });
