@@ -11,6 +11,7 @@ import commonMiddleware from './middleware/commonmiddleware';
 import { startBot, stopBot } from './utility/bot';
 import { Context, Telegraf } from "telegraf";
 import { Message } from "telegraf/typings/core/types/typegram";
+import CronJobService from './services/cronJob';
 
 
 
@@ -84,6 +85,11 @@ async function startServer() {
     try {
         await getClient();
         logger.info("✅ Successfully connected to the database");
+        
+        // Initialize and start cron job service
+        const cronJobService = new CronJobService();
+        await cronJobService.startCronJob();
+        logger.info("✅ Cron job service started");
         
         app.listen(PORT,'127.0.0.1', () => {
             logger.info(`✅ Server is running on http://localhost:${PORT}`);

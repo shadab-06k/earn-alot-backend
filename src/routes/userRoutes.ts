@@ -1,7 +1,6 @@
 // routes/user.ts
 import { Router } from "express";
 import controller from "../controllers/controller"; // <- named import
-import authMiddleware from "../middleware/authMiddleware";
 
 const router = Router();
 
@@ -20,5 +19,6 @@ router.get("/get-all-users", controller.getAllUsers);
 
 router.post("/send-referral", controller.referral);
 router.get("/get-referral-data", controller.getReferalData);
+
 
 export default router;

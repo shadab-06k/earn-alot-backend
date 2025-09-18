@@ -1,7 +1,10 @@
 node_modules
 .env
 
-# Contract files and folders
+
+build/
+
+# Contract files and folders (exclude from src and root)
 src/contracts/
 contracts/
 *.tact
@@ -9,8 +12,19 @@ contracts/
 *.fif
 *.boc
 *.pkg
-*.md
-*.ts
 *.abi
 *.code.boc
 
+# Exclude contract files from dist folder (but keep dist folder)
+dist/contracts/
+dist/**/*.tact
+dist/**/*.fc
+dist/**/*.fif
+dist/**/*.boc
+dist/**/*.pkg
+dist/**/*.abi
+dist/**/*.code.boc
+
+# Documentation and setup files
+CRON_JOB_SETUP.md
+*.md

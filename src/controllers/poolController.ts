@@ -168,7 +168,7 @@ export const getAllPools = async (req: Request, res: Response) => {
     const Pools = getPoolCollection(db);
     const Tickets = getTicketCollection(db);
 
-    const pools = await Pools.find({ status: 'ongoing' })
+    const pools = await Pools.find({})
       .sort({ createdAt: -1 })
       .toArray();
 
@@ -183,15 +183,19 @@ export const getAllPools = async (req: Request, res: Response) => {
           ...pool,
           ticketsPurchased,
           remainingTickets,
-          isFull: remainingTickets <= 0
+          isFull: remainingTickets <= 0,
+          isOngoing: pool.status === 'ongoing',
+          isCompleted: pool.status === 'completed'
         };
       })
     );
 
     return res.status(200).json({
-      message: "Pools fetched successfully",
+      message: "All pools fetched successfully",
       pools: poolsWithTicketInfo,
-      count: poolsWithTicketInfo.length
+      count: poolsWithTicketInfo.length,
+      ongoingCount: poolsWithTicketInfo.filter(pool => pool.status === 'ongoing').length,
+      completedCount: poolsWithTicketInfo.filter(pool => pool.status === 'completed').length
     });
   } catch (error) {
     logger.error("Error fetching pools", { error });
