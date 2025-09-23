@@ -122,6 +122,10 @@ JWT_SECRET=your-super-secret-jwt-key
 DB_NAME=earn-alot
 PORT=5000
 LOG_LEVEL=info
+
+# BSC Testnet Configuration for ERC20 Token Transfer
+PRIVATE_KEY=your_bsc_testnet_private_key_without_0x_prefix
+BSC_RPC_URL=https://data-seed-prebsc-1-s1.binance.org:8545/
 ```
 
 ### Frontend
@@ -161,6 +165,7 @@ const manifestUrl = 'https://your-domain.com/tonconnect-manifest.json';
 - `PUT /api/pools/:poolId` - Update pool status
 - `POST /api/login` - User authentication
 - `POST /api/buy-ticket` - Purchase lottery ticket
+- `POST /api/claim-bnb-ticket` - Claim BNB ticket and transfer ERC20 tokens
 - `GET /api/unique/user` - Get user's tickets
 
 ## 🎯 Smart Contract Integration
@@ -210,6 +215,30 @@ interface TicketDoc {
   walletAddress: string;
   lotteryNumbers: (number | string)[];
   // ... other fields
+}
+```
+
+### BNB Tickets Collection (ERC20 Token Transfer)
+```typescript
+interface BnbTicketDoc {
+  ticketId: string;
+  userId: string;
+  walletAddress: string;
+  userName: string;
+  telegramId: string;
+  bonusAmountInUSD: number;
+  bonusAmountInTON: number;
+  gldAmount: number;
+  rewardInTON: number;
+  rewardInUSD: number;
+  currentTonPrice: number;
+  bnbAddress: string;
+  tokenAddress: string; // ERC20 token contract address
+  poolAmount: number;
+  transactionHash?: string; // BSC transaction hash
+  status: 'pending' | 'completed' | 'failed';
+  createdAt: Date;
+  updatedAt: Date;
 }
 ```
 

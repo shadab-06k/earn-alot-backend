@@ -46,6 +46,28 @@ export interface ReferralDoc {
   createdAt: Date;
 }
 
+export interface BnbTicketDoc {
+  _id?: any;
+  ticketId: string;
+  userId: string; // UserDoc.uniqueID
+  walletAddress: string; // from headers
+  userName: string; // from JWT or user lookup
+  telegramId: string; // from JWT or user lookup
+  bonusAmountInUSD: number;
+  bonusAmountInTON: number;
+  gldAmount: number;
+  rewardInTON: number;
+  rewardInUSD: number;
+  currentTonPrice: number;
+  bnbAddress: string; // BNB address to send GLD to
+  tokenAddress: string; // ERC20 token contract address
+  poolAmount: number;
+  transactionHash?: string; // BSC transaction hash
+  status: 'pending' | 'completed' | 'failed';
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 // src/db/collections.ts
 import { Db, Collection } from "mongodb";
 
@@ -57,3 +79,6 @@ export const getTicketCollection = (db: Db): Collection<TicketDoc> =>
 
 export const getReferralCollection = (db: Db): Collection<ReferralDoc> =>
   db.collection<ReferralDoc>("referrals");
+
+export const getBnbTicketCollection = (db: Db): Collection<BnbTicketDoc> =>
+  db.collection<BnbTicketDoc>("bnbTickets");

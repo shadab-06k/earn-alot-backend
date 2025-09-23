@@ -14,6 +14,7 @@ router.post("/login", controller.login);
 router.post("/buy-ticket", controller.buyTicket);
 router.get("/user-tickets", controller.getMyTickets);
 router.get("/get-all-users", controller.getAllUsers);
+router.post("/claim-bnb-ticket", controller.claimBnbTicket);
 // router.get("/users", controller.getAllUsers);
 //for referral system
 

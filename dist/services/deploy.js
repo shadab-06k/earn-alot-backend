@@ -88,7 +88,7 @@ async function deployLotteryToTestnet(params) {
         messages: [
             (0, core_1.internal)({
                 to: contractAddr,
-                value: (0, core_1.toNano)("0.05"),
+                value: (0, core_1.toNano)("0.1"),
                 init: {
                     code: stateInit.code,
                     data: stateInit.data

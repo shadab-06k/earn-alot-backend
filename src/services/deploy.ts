@@ -126,7 +126,7 @@ await walletContract.sendTransfer({
     messages: [
         internal({
             to: contractAddr,
-            value: toNano("0.05"),
+            value: toNano("0.1"),
             init: {
                 code: stateInit.code,
                 data: stateInit.data
