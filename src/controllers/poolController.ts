@@ -126,7 +126,7 @@ export const createPool = async (req: Request, res: Response) => {
       duration: Number(duration),
       maxTicket: Number(maxTicket),
       startTime: new Date(startTime),
-      endTime: new Date(endTime || Date.now() + Number(duration) * 60 * 60 * 1000),
+      endTime: new Date(endTime),
       // totalPool: 0,
       // participantCount: 0,
       // rewardsPrepared: false,
