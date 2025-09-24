@@ -44,6 +44,17 @@ const createPool = async (req, res) => {
         }
         const startTimeDate = new Date(startTime);
         const endTimeDate = new Date(endTime);
+        // Debug logging
+        console.log('=== TIME VALIDATION DEBUG ===');
+        console.log('Raw startTime from frontend:', startTime);
+        console.log('Raw endTime from frontend:', endTime);
+        console.log('Parsed startTimeDate:', startTimeDate.toISOString());
+        console.log('Parsed endTimeDate:', endTimeDate.toISOString());
+        console.log('Start time (IST):', startTimeDate.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }));
+        console.log('End time (IST):', endTimeDate.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }));
+        console.log('Time difference (ms):', endTimeDate.getTime() - startTimeDate.getTime());
+        console.log('Time difference (hours):', (endTimeDate.getTime() - startTimeDate.getTime()) / (1000 * 60 * 60));
+        console.log('================================');
         if (isNaN(startTimeDate.getTime())) {
             return res.status(400).json({
                 error: "Invalid startTime format"
@@ -64,7 +75,14 @@ const createPool = async (req, res) => {
         // Check if end time is after start time
         if (endTimeDate <= startTimeDate) {
             return res.status(400).json({
-                error: "End time must be after start time"
+                error: "End time must be after start time",
+                debug: {
+                    startTime: startTimeDate.toISOString(),
+                    endTime: endTimeDate.toISOString(),
+                    startTimeIST: startTimeDate.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+                    endTimeIST: endTimeDate.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+                    timeDifference: endTimeDate.getTime() - startTimeDate.getTime()
+                }
             });
         }
         // Validate percentages
