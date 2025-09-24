@@ -49,6 +49,43 @@ export const createPool = async (req: Request, res: Response) => {
       });
     }
 
+    // Validate start time and end time
+    if (!startTime || !endTime) {
+      return res.status(400).json({
+        error: "Missing required fields: startTime, endTime"
+      });
+    }
+
+    const startTimeDate = new Date(startTime);
+    const endTimeDate = new Date(endTime);
+    
+    if (isNaN(startTimeDate.getTime())) {
+      return res.status(400).json({
+        error: "Invalid startTime format"
+      });
+    }
+    
+    if (isNaN(endTimeDate.getTime())) {
+      return res.status(400).json({
+        error: "Invalid endTime format"
+      });
+    }
+
+    // Check if start time is in the past
+    const now = new Date();
+    if (startTimeDate < now) {
+      return res.status(400).json({
+        error: "Start time cannot be in the past"
+      });
+    }
+
+    // Check if end time is after start time
+    if (endTimeDate <= startTimeDate) {
+      return res.status(400).json({
+        error: "End time must be after start time"
+      });
+    }
+
     // Validate percentages
     const adminPct = Number(adminPercentage) || 10;
     const floorPct = Number(floorPercentage) || 20;
@@ -113,6 +150,18 @@ export const createPool = async (req: Request, res: Response) => {
     const db = client.db(process.env.DB_NAME);
     const Pools = getPoolCollection(db);
 
+    // Calculate end time based on start time and duration (override frontend calculation)
+    const durationHours = Number(duration);
+    const calculatedEndTime = new Date(startTimeDate.getTime() + (durationHours * 60 * 60 * 1000));
+    
+    console.log('Start time:', startTimeDate.toISOString());
+    console.log('Duration (hours):', durationHours);
+    console.log('Frontend end time:', endTimeDate.toISOString());
+    console.log('Calculated end time:', calculatedEndTime.toISOString());
+    
+    // Use the calculated end time instead of the frontend provided one
+    const finalEndTime = calculatedEndTime;
+
     const newPool: PoolDoc = {
       poolId: randomUUID(),
       contractAddress,
@@ -125,8 +174,8 @@ export const createPool = async (req: Request, res: Response) => {
       bid: Number(bid),
       duration: Number(duration),
       maxTicket: Number(maxTicket),
-      startTime: new Date(startTime),
-      endTime: new Date(endTime),
+      startTime: startTimeDate,
+      endTime: finalEndTime,
       // totalPool: 0,
       // participantCount: 0,
       // rewardsPrepared: false,
@@ -147,12 +196,23 @@ export const createPool = async (req: Request, res: Response) => {
       maxTicket: newPool.maxTicket,
       adminPercentage: newPool.adminPercentage,
       floorPercentage: newPool.floorPercentage,
-      bonusPercentage: newPool.bonusPercentage
+      bonusPercentage: newPool.bonusPercentage,
+      startTime: newPool.startTime.toISOString(),
+      endTime: newPool.endTime.toISOString(),
+      calculatedDuration: `${durationHours} hours`
     });
 
     return res.status(201).json({
       message: "Pool created successfully with deployed smart contract",
-      pool: { ...newPool, _id: result.insertedId },
+      pool: { 
+        ...newPool, 
+        _id: result.insertedId,
+        // Add timezone info for debugging
+        startTimeUTC: newPool.startTime.toISOString(),
+        endTimeUTC: newPool.endTime.toISOString(),
+        startTimeIST: newPool.startTime.toLocaleString('en-IN', {timeZone: 'Asia/Kolkata'}),
+        endTimeIST: newPool.endTime.toLocaleString('en-IN', {timeZone: 'Asia/Kolkata'})
+      },
       contractAddress,
       deploymentStatus: "success",
       deploymentDetails: {
