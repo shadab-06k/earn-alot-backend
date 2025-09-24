@@ -9,7 +9,7 @@ const buildDeploymentTx_1 = require("./buildDeploymentTx"); // 👈 Import helpe
 //import { Address } from "@ton/core"; // ✅ CORRECT
 const ton_2 = require("@ton/ton");
 async function deployLotteryToTestnet(params) {
-    const { adminPct, floorPct, bonusPct, decayNum, decayDenom, bid, howLong, maxTicket } = params;
+    const { adminPct, floorPct, bonusPct, decayNum, decayDenom, bid, howLong, maxTicket, } = params;
     //  const mnemonic: string[] = [
     // "stem", "ice", "daughter", "portion", "artefact",
     // "brother", "regret", "fantasy", "void","display",
@@ -17,47 +17,47 @@ async function deployLotteryToTestnet(params) {
     // ,"parrot","scene","public","equal","twin","blanket","favorite","traffic" ];
     // Get mnemonic from environment variable
     const mnemonicString = process.env.ADMIN_MNEMONIC;
-    console.log('ADMIN_MNEMONIC from env===>>', mnemonicString);
+    console.log("ADMIN_MNEMONIC from env===>>", mnemonicString);
     if (!mnemonicString) {
         throw new Error("ADMIN_MNEMONIC environment variable is not set");
     }
     let mnemonic;
     try {
         // Try to parse as JSON array first
-        if (mnemonicString.startsWith('[') && mnemonicString.endsWith(']')) {
-            console.log('Parsing mnemonic as JSON array...');
+        if (mnemonicString.startsWith("[") && mnemonicString.endsWith("]")) {
+            console.log("Parsing mnemonic as JSON array...");
             mnemonic = JSON.parse(mnemonicString);
         }
         else {
             // Fallback to space-separated string
-            console.log('Parsing mnemonic as space-separated string...');
+            console.log("Parsing mnemonic as space-separated string...");
             mnemonic = mnemonicString.split(" ");
         }
     }
     catch (parseError) {
-        console.log('JSON parse failed, trying space-separated...');
+        console.log("JSON parse failed, trying space-separated...");
         mnemonic = mnemonicString.split(" ");
     }
-    console.log('mnemonic array===>>', mnemonic);
-    console.log('mnemonic length===>>', mnemonic.length);
+    console.log("mnemonic array===>>", mnemonic);
+    console.log("mnemonic length===>>", mnemonic.length);
     if (mnemonic.length !== 24) {
         throw new Error(`Invalid mnemonic length. Expected 24 words, got ${mnemonic.length}. Please check your ADMIN_MNEMONIC format.`);
     }
     let keyPair;
     try {
-        console.log('Generating key pair from mnemonic...');
+        console.log("Generating key pair from mnemonic...");
         keyPair = await (0, crypto_1.mnemonicToPrivateKey)(mnemonic);
-        console.log('✅ Key pair generated successfully');
-        console.log('Public key length:', keyPair.publicKey.length);
+        console.log("✅ Key pair generated successfully");
+        console.log("Public key length:", keyPair.publicKey.length);
     }
     catch (keyPairError) {
-        console.error('❌ Error generating key pair:', keyPairError);
+        console.error("❌ Error generating key pair:", keyPairError);
         throw new Error(`Failed to generate key pair: ${keyPairError.message}`);
     }
     // Try multiple TON endpoints for better reliability
     const endpoints = [
         "https://testnet.toncenter.com/api/v2/jsonRPC",
-        "https://toncenter.com/api/v2/jsonRPC"
+        "https://toncenter.com/api/v2/jsonRPC",
     ];
     let client;
     let lastError;
@@ -66,7 +66,7 @@ async function deployLotteryToTestnet(params) {
             console.log(`Trying TON endpoint: ${endpoint}`);
             client = new ton_1.TonClient({
                 endpoint,
-                apiKey: "a2ac90f03c7c129df083afa916b29c19609e4a54cd0686dc75ff11631ebd41b3"
+                apiKey: "a2ac90f03c7c129df083afa916b29c19609e4a54cd0686dc75ff11631ebd41b3",
             });
             // Test the connection
             await client.getMasterchainInfo();
@@ -83,24 +83,24 @@ async function deployLotteryToTestnet(params) {
         throw new Error(`Failed to connect to any TON endpoint. Last error: ${lastError?.message}`);
     }
     //const client = await getClientWithRetry("https://testnet.toncenter.com/api/v2/jsonRPC");
-    console.log('client===>>', client);
+    console.log("client===>>", client);
     // Try different wallet versions to find the correct one
     let wallet;
     let walletAddress;
     // Try v5r1 first (most common)
     try {
-        console.log('Trying wallet version: v5r1');
+        console.log("Trying wallet version: v5r1");
         const walletId = {
             networkGlobalId: -3, // Use -3 for testnet, or -239 for mainnet
             context: {
-                walletVersion: 'v5r1',
+                walletVersion: "v5r1",
                 workchain: 0,
-                subwalletNumber: 0
-            }
+                subwalletNumber: 0,
+            },
         };
         const testWallet = ton_1.WalletContractV5R1.create({
             publicKey: keyPair.publicKey,
-            walletId
+            walletId,
         });
         walletAddress = testWallet.address.toString();
         console.log(`Wallet address (v5r1):`, walletAddress);
@@ -108,7 +108,7 @@ async function deployLotteryToTestnet(params) {
         const testWalletContract = client.open(testWallet);
         const testBalance = await testWalletContract.getBalance();
         const balanceInTON = Number(testBalance) / 1e9;
-        console.log(`Balance for v5r1:`, balanceInTON, 'TON');
+        console.log(`Balance for v5r1:`, balanceInTON, "TON");
         if (balanceInTON >= 0.1) {
             console.log(`✅ Found wallet with sufficient balance using v5r1`);
             wallet = testWallet;
@@ -121,7 +121,7 @@ async function deployLotteryToTestnet(params) {
         console.log(`❌ Error with v5r1:`, versionError.message);
         throw new Error(`Failed to find wallet with sufficient balance. Please check your mnemonic and ensure you have at least 0.1 TON in your testnet wallet. Error: ${versionError.message}`);
     }
-    console.log('✅ Using wallet:', walletAddress);
+    console.log("✅ Using wallet:", walletAddress);
     const walletContract = client.open(wallet);
     let seqno;
     try {
@@ -134,8 +134,8 @@ async function deployLotteryToTestnet(params) {
     }
     let contractAddr, stateInit;
     try {
-        console.log('Building deployment transaction...');
-        console.log('Deployment params:', {
+        console.log("Building deployment transaction...");
+        console.log("Deployment params:", {
             adminPct,
             floorPct,
             bonusPct,
@@ -143,7 +143,7 @@ async function deployLotteryToTestnet(params) {
             decayDenom,
             bid,
             howLong,
-            maxTicket
+            maxTicket,
         });
         const deploymentTxResult = await (0, buildDeploymentTx_1.buildDeploymentTx)({
             adminPct,
@@ -153,19 +153,22 @@ async function deployLotteryToTestnet(params) {
             decayDenom,
             bid,
             howLong,
-            maxTicket
+            maxTicket,
         });
         contractAddr = deploymentTxResult.contractAddr;
         stateInit = deploymentTxResult.stateInit;
-        console.log('✅ Deployment transaction built successfully');
-        console.log('Contract address:', contractAddr.toString());
+        console.log("✅ Deployment transaction built successfully");
+        console.log("Contract address:", contractAddr.toString());
     }
     catch (buildError) {
-        console.error('❌ Error building deployment transaction:', buildError);
+        console.error("❌ Error building deployment transaction:", buildError);
         throw new Error(`Failed to build deployment transaction: ${buildError.message}`);
     }
     console.log("📍 Deploying contract to address:", contractAddr.toString());
-    const address = wallet.address.toString({ testOnly: true, bounceable: false });
+    const address = wallet.address.toString({
+        testOnly: true,
+        bounceable: false,
+    });
     console.log("Wallet Address (testnet):", address);
     console.log("🧪 contractAddr:", contractAddr);
     console.log("🧪 Type of contractAddr:", contractAddr);
@@ -186,7 +189,7 @@ async function deployLotteryToTestnet(params) {
         console.log("✅ Contract is already deployed. No action needed.");
         return {
             contractAddr: contractAddr.toString(), // ✅ Convert to string for consistent response
-            stateInit
+            stateInit,
         };
     }
     try {
@@ -199,12 +202,12 @@ async function deployLotteryToTestnet(params) {
                     value: (0, core_1.toNano)("0.1"),
                     init: {
                         code: stateInit.code,
-                        data: stateInit.data
+                        data: stateInit.data,
                     },
-                    body: null
-                })
+                    body: null,
+                }),
             ],
-            sendMode: ton_2.SendMode.CARRY_ALL_REMAINING_BALANCE // Add the required sendMode
+            sendMode: ton_2.SendMode.CARRY_ALL_REMAINING_BALANCE, // Add the required sendMode
         });
         console.log("✅ Deployment transaction sent.");
     }
@@ -214,7 +217,7 @@ async function deployLotteryToTestnet(params) {
     }
     return {
         contractAddr: contractAddr.toString(), // ✅ Convert to string for consistent response
-        stateInit
+        stateInit,
     };
 }
 // deployLotteryToTestnet(requestAnimationFrame).catch(err => {
