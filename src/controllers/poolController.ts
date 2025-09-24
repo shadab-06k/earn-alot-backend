@@ -82,7 +82,19 @@ export const createPool = async (req: Request, res: Response) => {
       maxTicket: Number(maxTicket)
     };
 
-    const deploymentResult = await deployLotteryToTestnet(deploymentParams);
+    let deploymentResult;
+    try {
+      deploymentResult = await deployLotteryToTestnet(deploymentParams);
+    } catch (deploymentError: any) {
+      logger.error("Contract deployment failed", { 
+        error: deploymentError.message,
+        stack: deploymentError.stack 
+      });
+      return res.status(500).json({
+        error: "Failed to deploy smart contract",
+        details: deploymentError.message
+      });
+    }
     
     // Handle the response structure: { contractAddr: "...", stateInit: {...} }
     if (!deploymentResult || !deploymentResult.contractAddr) {
