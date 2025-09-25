@@ -364,9 +364,9 @@ const referral = async (req, res) => {
                 .json({ error: "Wallet address required in header" });
         const { referralCode } = req.body;
         // Validate referral code format
-        if (!(0, pointsHelper_1.isValidReferralCode)(referralCode)) {
-            return res.status(400).json({ message: "Invalid referral code format" });
-        }
+        // if (!isValidReferralCode(referralCode)) {
+        //   return res.status(400).json({ message: "Invalid referral code format" });
+        // }
         const client = await (0, connections_1.getClient)();
         const db = client.db(process.env.DB_NAME);
         const userCollection = (0, userModel_1.getUserCollection)(db);

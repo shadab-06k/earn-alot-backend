@@ -450,9 +450,9 @@ export const referral = async (req: Request, res: Response) => {
     const { referralCode } = req.body;
 
     // Validate referral code format
-    if (!isValidReferralCode(referralCode)) {
-      return res.status(400).json({ message: "Invalid referral code format" });
-    }
+    // if (!isValidReferralCode(referralCode)) {
+    //   return res.status(400).json({ message: "Invalid referral code format" });
+    // }
 
     const client = await getClient();
     const db = client.db(process.env.DB_NAME);
