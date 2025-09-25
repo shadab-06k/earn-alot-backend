@@ -13,25 +13,86 @@ const core_1 = require("@ton/core");
 class CronJobService {
     constructor() {
         this.adminWallet = null;
+        this.adminKeyPair = null;
         logger_1.default.info("CronJobService initialized");
-        // Initialize TON client
-        this.tonClient = new ton_1.TonClient({
-            endpoint: "https://testnet.toncenter.com/api/v2/jsonRPC",
-            apiKey: "a2ac90f03c7c129df083afa916b29c19609e4a54cd0686dc75ff11631ebd41b3",
-        });
+    }
+    async initialize() {
+        // Initialize TON client with retry mechanism
+        await this.initializeTonClient();
         // Initialize admin wallet and wait for it
-        this.initializeAdminWallet();
+        await this.initializeAdminWallet();
+    }
+    async initializeTonClient() {
+        const endpoints = [
+            "https://testnet.toncenter.com/api/v2/jsonRPC",
+            "https://toncenter.com/api/v2/jsonRPC"
+        ];
+        for (const endpoint of endpoints) {
+            try {
+                console.log(`Trying TON endpoint: ${endpoint}`);
+                this.tonClient = new ton_1.TonClient({
+                    endpoint: endpoint,
+                    apiKey: "a2ac90f03c7c129df083afa916b29c19609e4a54cd0686dc75ff11631ebd41b3",
+                });
+                // Test the connection
+                await this.tonClient.getMasterchainInfo();
+                console.log(`TON client initialized successfully with endpoint: ${endpoint}`);
+                return;
+            }
+            catch (error) {
+                console.error(`Failed to connect to ${endpoint}:`, error);
+                if (endpoint === endpoints[endpoints.length - 1]) {
+                    throw new Error(`Failed to connect to any TON endpoint. Last error: ${error}`);
+                }
+            }
+        }
+    }
+    async getMnemonicAndKeyPair() {
+        // Get mnemonic from environment variable
+        const mnemonicString = process.env.ADMIN_MNEMONIC;
+        console.log('ADMIN_MNEMONIC from env===>>', mnemonicString);
+        if (!mnemonicString) {
+            throw new Error("ADMIN_MNEMONIC environment variable is not set");
+        }
+        let mnemonic;
+        try {
+            // Try to parse as JSON array first
+            if (mnemonicString.startsWith('[') && mnemonicString.endsWith(']')) {
+                console.log('Parsing mnemonic as JSON array...');
+                mnemonic = JSON.parse(mnemonicString);
+            }
+            else {
+                // Fallback to space-separated string
+                console.log('Parsing mnemonic as space-separated string...');
+                mnemonic = mnemonicString.split(" ");
+            }
+        }
+        catch (parseError) {
+            console.log('JSON parse failed, trying space-separated...');
+            mnemonic = mnemonicString.split(" ");
+        }
+        console.log('mnemonic array===>>', mnemonic);
+        console.log('mnemonic length===>>', mnemonic.length);
+        if (mnemonic.length !== 24) {
+            throw new Error(`Invalid mnemonic length. Expected 24 words, got ${mnemonic.length}. Please check your ADMIN_MNEMONIC format.`);
+        }
+        try {
+            const keyPair = await (0, crypto_1.mnemonicToPrivateKey)(mnemonic);
+            console.log('Key pair generated successfully===>>');
+            return { mnemonic, keyPair };
+        }
+        catch (keyError) {
+            console.error('Key pair generation error:', keyError);
+            throw new Error(`Failed to generate key pair from mnemonic: ${keyError.message}`);
+        }
     }
     async initializeAdminWallet() {
         try {
-            const mnemonic = [
-                "stem", "ice", "daughter", "portion", "artefact",
-                "brother", "regret", "fantasy", "void", "display",
-                "head", "ensure", "success", "milk", "verify", "antique",
-                "parrot", "scene", "public", "equal", "twin", "blanket", "favorite", "traffic"
-            ];
             logger_1.default.info("Initializing admin wallet...");
-            const keyPair = await (0, crypto_1.mnemonicToPrivateKey)(mnemonic);
+            // Get mnemonic and key pair using helper method
+            const { mnemonic, keyPair } = await this.getMnemonicAndKeyPair();
+            // Store key pair for later use
+            this.adminKeyPair = keyPair;
             const walletId = {
                 networkGlobalId: -3, // Use -3 for testnet, or -239 for mainnet
                 context: {
@@ -40,14 +101,34 @@ class CronJobService {
                     subwalletNumber: 0
                 }
             };
-            this.adminWallet = ton_1.WalletContractV5R1.create({
-                publicKey: keyPair.publicKey,
-                walletId
-            });
+            try {
+                this.adminWallet = ton_1.WalletContractV5R1.create({
+                    publicKey: keyPair.publicKey,
+                    walletId
+                });
+                console.log('Wallet contract created successfully===>>');
+            }
+            catch (walletError) {
+                console.error('Wallet contract creation error:', walletError);
+                throw new Error(`Failed to create wallet contract: ${walletError.message}`);
+            }
             logger_1.default.info(`Admin wallet initialized successfully. Address: ${this.adminWallet.address.toString()}`);
-            // Test the wallet by getting its state
+            // Test the wallet by getting its state with retry mechanism
             const walletContract = this.tonClient.open(this.adminWallet);
-            const balance = await walletContract.getBalance();
+            let balance;
+            try {
+                balance = await walletContract.getBalance();
+                console.log('Wallet balance checked successfully===>>', (0, ton_1.fromNano)(balance));
+            }
+            catch (balanceError) {
+                console.error('Wallet balance check error:', balanceError);
+                throw new Error(`Failed to check wallet balance: ${balanceError.message}`);
+            }
+            // Check if wallet has sufficient balance (at least 0.1 TON)
+            const balanceInTON = parseFloat((0, ton_1.fromNano)(balance));
+            if (balanceInTON < 0.1) {
+                throw new Error(`Insufficient wallet balance. Need at least 0.1 TON, have ${balanceInTON} TON`);
+            }
             logger_1.default.info(`Admin wallet ready. Balance: ${(0, ton_1.fromNano)(balance)} TON`);
         }
         catch (error) {
@@ -57,36 +138,22 @@ class CronJobService {
     }
     // Start the cron job that runs every 5 minutes
     async startCronJob() {
-        try {
-            logger_1.default.info("Starting cron job service...");
-            // Wait for wallet initialization
-            await this.waitForWalletInitialization();
-            // Run immediately first time
-            logger_1.default.info("Running initial pool processing...");
+        logger_1.default.info("Starting cron job service...");
+        // Initialize the service first
+        await this.initialize();
+        // Run immediately first time
+        await this.processEndedPools();
+        // Run every 5 minutes (300000 ms)
+        setInterval(async () => {
             await this.processEndedPools();
-            // Run every 5 minutes (300000 ms)
-            setInterval(async () => {
-                try {
-                    logger_1.default.info("Cron job triggered - processing ended pools...");
-                    await this.processEndedPools();
-                    logger_1.default.info("Cron job completed successfully");
-                }
-                catch (error) {
-                    logger_1.default.error("Cron job execution failed:", error);
-                }
-            }, 5 * 60 * 1000);
-            logger_1.default.info("✅ Cron job scheduled to run every 5 minutes");
-        }
-        catch (error) {
-            logger_1.default.error("❌ Failed to start cron job service:", error);
-            throw error;
-        }
+        }, 5 * 60 * 1000);
+        logger_1.default.info("Cron job scheduled to run every 5 minutes");
     }
     // Wait for wallet initialization to complete
     async waitForWalletInitialization() {
         return new Promise((resolve) => {
             const checkWallet = () => {
-                if (this.adminWallet) {
+                if (this.adminWallet && this.adminKeyPair) {
                     resolve();
                 }
                 else {
@@ -98,47 +165,26 @@ class CronJobService {
     }
     async processEndedPools() {
         try {
-            logger_1.default.info("🔍 Checking for ended pools...");
             const client = await (0, connections_1.getClient)();
             const db = client.db(process.env.DB_NAME);
             const Pools = (0, poolModel_1.getPoolCollection)(db);
             const allPools = await Pools.find({}).toArray();
-            logger_1.default.info(`📊 Total pools in database: ${allPools.length}`);
             if (allPools.length === 0) {
-                logger_1.default.info("No pools found in database");
                 return;
             }
             const now = new Date();
-            logger_1.default.info(`⏰ Current time: ${now.toISOString()}`);
-            const endedPools = allPools.filter(pool => {
-                const poolEndTime = new Date(pool.endTime);
-                const isEnded = poolEndTime < now;
-                const isNotCompleted = pool.status !== "completed";
-                logger_1.default.info(`Pool ${pool.poolId}: endTime=${poolEndTime.toISOString()}, isEnded=${isEnded}, status=${pool.status}, isNotCompleted=${isNotCompleted}`);
-                return isEnded && isNotCompleted;
-            });
-            logger_1.default.info(`🎯 Found ${endedPools.length} unprocessed ended pools`);
+            const endedPools = allPools.filter(pool => new Date(pool.endTime) < now && pool.status !== "completed");
             if (endedPools.length === 0) {
-                logger_1.default.info("No unprocessed ended pools found");
                 return;
             }
+            logger_1.default.info(`Processing ${endedPools.length} unprocessed pools`);
             for (const pool of endedPools) {
-                try {
-                    logger_1.default.info(`🔄 Processing pool: ${pool.poolId} (${pool.status})`);
-                    await this.processPoolRewards(pool);
-                    logger_1.default.info(`✅ Successfully processed pool: ${pool.poolId}`);
-                    await this.sleep(5000);
-                }
-                catch (poolError) {
-                    logger_1.default.error(`❌ Failed to process pool ${pool.poolId}:`, poolError);
-                    // Continue with next pool instead of stopping
-                }
+                await this.processPoolRewards(pool);
+                await this.sleep(5000);
             }
-            logger_1.default.info("🏁 Finished processing all ended pools");
         }
         catch (error) {
-            logger_1.default.error("❌ Error processing ended pools:", error);
-            throw error;
+            logger_1.default.error("Error processing ended pools:", error);
         }
     }
     async processPoolRewards(pool) {
@@ -165,7 +211,10 @@ class CronJobService {
                 .endCell();
             const boc = prepareRewardsMessage.toBoc().toString('base64');
             logger_1.default.info(`Prepare BOC: ${boc}`);
-            await this.sendMessage(contractAddress, prepareRewardsMessage, (0, ton_1.toNano)("0.05"));
+            // Use dynamic gas estimation for prepare rewards operation
+            const gasAmount = this.getGasEstimate('prepare');
+            logger_1.default.info(`Using gas amount: ${(0, ton_1.fromNano)(gasAmount)} TON for prepare rewards`);
+            await this.sendMessage(contractAddress, prepareRewardsMessage, gasAmount);
         }
         catch (error) {
             logger_1.default.error(`Prepare failed:`, error);
@@ -179,7 +228,10 @@ class CronJobService {
                 .endCell();
             const boc = distributeRewardsMessage.toBoc().toString('base64');
             logger_1.default.info(`Distribute BOC: ${boc}`);
-            await this.sendMessage(contractAddress, distributeRewardsMessage, (0, ton_1.toNano)("0.05"));
+            // Use dynamic gas estimation for distribute rewards operation
+            const gasAmount = this.getGasEstimate('distribute');
+            logger_1.default.info(`Using gas amount: ${(0, ton_1.fromNano)(gasAmount)} TON for distribute rewards`);
+            await this.sendMessage(contractAddress, distributeRewardsMessage, gasAmount);
         }
         catch (error) {
             logger_1.default.error(`Distribute failed:`, error);
@@ -187,39 +239,56 @@ class CronJobService {
         }
     }
     async sendMessage(contractAddress, messageBody, value) {
-        try {
-            if (!this.adminWallet) {
-                throw new Error("Admin wallet not initialized");
+        const maxRetries = 3;
+        let lastError;
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                if (!this.adminWallet) {
+                    throw new Error("Admin wallet not initialized");
+                }
+                if (!this.adminKeyPair) {
+                    throw new Error("Admin key pair not initialized");
+                }
+                // Open the wallet contract
+                const walletContract = this.tonClient.open(this.adminWallet);
+                const seqno = await walletContract.getSeqno();
+                // Create the internal message with higher gas limit
+                const internalMessage = (0, ton_1.internal)({
+                    to: contractAddress,
+                    value: value,
+                    body: messageBody,
+                    init: undefined,
+                    bounce: false,
+                });
+                logger_1.default.info(`Sending message attempt ${attempt}/${maxRetries} to ${contractAddress} with value ${(0, ton_1.fromNano)(value)} TON`);
+                await walletContract.sendTransfer({
+                    seqno,
+                    secretKey: this.adminKeyPair.secretKey,
+                    messages: [internalMessage],
+                    sendMode: 1,
+                });
+                logger_1.default.info(`Message sent successfully on attempt ${attempt}`);
+                return; // Success, exit the retry loop
             }
-            // Open the wallet contract
-            const walletContract = this.tonClient.open(this.adminWallet);
-            const seqno = await walletContract.getSeqno();
-            // Create the internal message
-            const internalMessage = (0, ton_1.internal)({
-                to: contractAddress,
-                value: value,
-                body: messageBody,
-                init: undefined,
-                bounce: false,
-            });
-            const mnemonic = [
-                "stem", "ice", "daughter", "portion", "artefact",
-                "brother", "regret", "fantasy", "void", "display",
-                "head", "ensure", "success", "milk", "verify", "antique",
-                "parrot", "scene", "public", "equal", "twin", "blanket", "favorite", "traffic"
-            ];
-            const keyPair = await (0, crypto_1.mnemonicToPrivateKey)(mnemonic);
-            await walletContract.sendTransfer({
-                seqno,
-                secretKey: keyPair.secretKey,
-                messages: [internalMessage],
-                sendMode: 1,
-            });
+            catch (error) {
+                lastError = error;
+                logger_1.default.error(`Send message attempt ${attempt}/${maxRetries} failed:`, error.message);
+                // Check if it's a gas-related error
+                if (error.message.includes('out of gas') || error.message.includes('-14')) {
+                    logger_1.default.warn(`Gas error detected, increasing gas amount for retry ${attempt + 1}`);
+                    // Increase gas amount for next attempt
+                    value = BigInt(Math.floor(Number(value) * 1.5));
+                }
+                if (attempt < maxRetries) {
+                    const delay = attempt * 2000; // Exponential backoff: 2s, 4s, 6s
+                    logger_1.default.info(`Retrying in ${delay}ms...`);
+                    await this.sleep(delay);
+                }
+            }
         }
-        catch (error) {
-            logger_1.default.error(`Send message failed:`, error);
-            throw error;
-        }
+        // If all retries failed
+        logger_1.default.error(`Send message failed after ${maxRetries} attempts:`, lastError);
+        throw lastError;
     }
     async updatePoolStatus(poolId, status) {
         try {
@@ -242,10 +311,22 @@ class CronJobService {
     sleep(ms) {
         return new Promise((resolve) => setTimeout(resolve, ms));
     }
+    // Estimate gas requirements for different operations
+    getGasEstimate(operation) {
+        const gasEstimates = {
+            prepare: (0, ton_1.toNano)("0.15"), // Higher gas for prepare rewards
+            distribute: (0, ton_1.toNano)("0.2") // Even higher gas for distribute rewards
+        };
+        return gasEstimates[operation];
+    }
     // Test function to manually trigger prepare rewards (for debugging)
     async testPrepareRewards(contractAddress) {
         try {
             logger_1.default.info(`🧪 Testing Prepare_rewards for contract: ${contractAddress}`);
+            // Initialize if not already done
+            if (!this.adminWallet || !this.adminKeyPair) {
+                await this.initialize();
+            }
             if (!this.adminWallet) {
                 logger_1.default.error("Admin wallet not initialized");
                 return;
@@ -262,8 +343,10 @@ class CronJobService {
     async processLastEndedPool() {
         try {
             logger_1.default.info("Processing unprocessed ended pools...");
-            // Wait for wallet initialization
-            await this.waitForWalletInitialization();
+            // Initialize if not already done
+            if (!this.adminWallet || !this.adminKeyPair) {
+                await this.initialize();
+            }
             if (!this.adminWallet) {
                 logger_1.default.error("Admin wallet not initialized");
                 return;
@@ -318,8 +401,10 @@ class CronJobService {
     async processSpecificPool(poolId) {
         try {
             logger_1.default.info(`Processing specific pool: ${poolId}`);
-            // Wait for wallet initialization
-            await this.waitForWalletInitialization();
+            // Initialize if not already done
+            if (!this.adminWallet || !this.adminKeyPair) {
+                await this.initialize();
+            }
             if (!this.adminWallet) {
                 logger_1.default.error("Admin wallet not initialized");
                 return;

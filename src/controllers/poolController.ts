@@ -367,72 +367,9 @@ export const updatePoolStatus = async (req: Request, res: Response) => {
   }
 };
 
-// Manual trigger for cron job processing
-export const triggerCronJob = async (req: Request, res: Response) => {
-  try {
-    logger.info("Manual cron job trigger requested");
-    
-    // Import CronJobService here to avoid circular dependency
-    const CronJobService = require('../services/cronJob').default;
-    const cronJobService = new CronJobService();
-    
-    // Wait for wallet initialization
-    await cronJobService.waitForWalletInitialization();
-    
-    // Process ended pools
-    await cronJobService.processEndedPools();
-    
-    res.status(200).json({
-      success: true,
-      message: "Cron job triggered successfully"
-    });
-  } catch (error) {
-    logger.error("Error triggering cron job:", error);
-    res.status(500).json({
-      error: "Failed to trigger cron job",
-      details: error instanceof Error ? error.message : "Unknown error"
-    });
-  }
-};
-
-// Manual trigger for specific pool processing
-export const triggerPoolProcessing = async (req: Request, res: Response) => {
-  try {
-    const { poolId } = req.params;
-    
-    if (!poolId) {
-      return res.status(400).json({
-        error: "Pool ID is required"
-      });
-    }
-    
-    logger.info(`Manual pool processing trigger requested for pool: ${poolId}`);
-    
-    // Import CronJobService here to avoid circular dependency
-    const CronJobService = require('../services/cronJob').default;
-    const cronJobService = new CronJobService();
-    
-    // Process specific pool
-    await cronJobService.processSpecificPool(poolId);
-    
-    res.status(200).json({
-      success: true,
-      message: `Pool ${poolId} processing triggered successfully`
-    });
-  } catch (error) {
-    logger.error(`Error processing pool ${req.params.poolId}:`, error);
-    res.status(500).json({
-      error: "Failed to process pool",
-      details: error instanceof Error ? error.message : "Unknown error"
-    });
-  }
-};
-
 export default {
   createPool,
   getAllPools,
   getPoolById,
-  updatePoolStatus,
-  triggerCronJob,
-  triggerPoolProcessing
+  updatePoolStatus
 };

@@ -76,8 +76,8 @@ async function startServer() {
         const cronJobService = new cronJob_1.default();
         await cronJobService.startCronJob();
         logger_1.default.info("✅ Cron job service started");
-        app.listen(PORT, '0.0.0.0', () => {
-            logger_1.default.info(`✅ Server is running on http://0.0.0.0:${PORT}`);
+        app.listen(PORT, '127.0.0.1', () => {
+            logger_1.default.info(`✅ Server is running on http://localhost:${PORT}`);
         });
     }
     catch (error) {
