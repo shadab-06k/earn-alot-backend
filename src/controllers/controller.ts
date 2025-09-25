@@ -477,9 +477,9 @@ export const referral = async (req: Request, res: Response) => {
     }
 
     // Check if current user is trying to refer themselves
-    if (referrerUser.walletAddress === currentUser.walletAddress) {
-      return res.status(400).json({ message: "Cannot refer yourself" });
-    }
+    // if (referrerUser.walletAddress === currentUser.walletAddress) {
+    //   return res.status(400).json({ message: "Cannot refer yourself" });
+    // }
 
     // Check if this referral already exists
     const existingReferral = await referralCollection.findOne({
