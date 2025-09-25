@@ -394,11 +394,11 @@ const referral = async (req, res) => {
             userId: currentUser.uniqueID,
             referralCode: referralCode,
         });
-        if (existingReferral) {
-            return res
-                .status(400)
-                .json({ message: "You have already used this referral code" });
-        }
+        // if (existingReferral) {
+        //   return res
+        //     .status(400)
+        //     .json({ message: "You have already used this referral code" });
+        // }
         // Get referrer's current referral count to calculate points
         const referrerReferrals = await referralCollection
             .find({
