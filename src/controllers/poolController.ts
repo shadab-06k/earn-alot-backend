@@ -65,8 +65,6 @@ export const createPool = async (req: Request, res: Response) => {
     console.log('Raw endTime from frontend:', endTime);
     console.log('Parsed startTimeDate:', startTimeDate.toISOString());
     console.log('Parsed endTimeDate:', endTimeDate.toISOString());
-    console.log('Start time (IST):', startTimeDate.toLocaleString('en-IN', {timeZone: 'Asia/Kolkata'}));
-    console.log('End time (IST):', endTimeDate.toLocaleString('en-IN', {timeZone: 'Asia/Kolkata'}));
     console.log('Time difference (ms):', endTimeDate.getTime() - startTimeDate.getTime());
     console.log('Time difference (hours):', (endTimeDate.getTime() - startTimeDate.getTime()) / (1000 * 60 * 60));
     console.log('================================');
@@ -98,9 +96,8 @@ export const createPool = async (req: Request, res: Response) => {
         debug: {
           startTime: startTimeDate.toISOString(),
           endTime: endTimeDate.toISOString(),
-          startTimeIST: startTimeDate.toLocaleString('en-IN', {timeZone: 'Asia/Kolkata'}),
-          endTimeIST: endTimeDate.toLocaleString('en-IN', {timeZone: 'Asia/Kolkata'}),
-          timeDifference: endTimeDate.getTime() - startTimeDate.getTime()
+          timeDifference: endTimeDate.getTime() - startTimeDate.getTime(),
+          timeDifferenceHours: (endTimeDate.getTime() - startTimeDate.getTime()) / (1000 * 60 * 60)
         }
       });
     }
@@ -370,9 +367,72 @@ export const updatePoolStatus = async (req: Request, res: Response) => {
   }
 };
 
+// Manual trigger for cron job processing
+export const triggerCronJob = async (req: Request, res: Response) => {
+  try {
+    logger.info("Manual cron job trigger requested");
+    
+    // Import CronJobService here to avoid circular dependency
+    const CronJobService = require('../services/cronJob').default;
+    const cronJobService = new CronJobService();
+    
+    // Wait for wallet initialization
+    await cronJobService.waitForWalletInitialization();
+    
+    // Process ended pools
+    await cronJobService.processEndedPools();
+    
+    res.status(200).json({
+      success: true,
+      message: "Cron job triggered successfully"
+    });
+  } catch (error) {
+    logger.error("Error triggering cron job:", error);
+    res.status(500).json({
+      error: "Failed to trigger cron job",
+      details: error instanceof Error ? error.message : "Unknown error"
+    });
+  }
+};
+
+// Manual trigger for specific pool processing
+export const triggerPoolProcessing = async (req: Request, res: Response) => {
+  try {
+    const { poolId } = req.params;
+    
+    if (!poolId) {
+      return res.status(400).json({
+        error: "Pool ID is required"
+      });
+    }
+    
+    logger.info(`Manual pool processing trigger requested for pool: ${poolId}`);
+    
+    // Import CronJobService here to avoid circular dependency
+    const CronJobService = require('../services/cronJob').default;
+    const cronJobService = new CronJobService();
+    
+    // Process specific pool
+    await cronJobService.processSpecificPool(poolId);
+    
+    res.status(200).json({
+      success: true,
+      message: `Pool ${poolId} processing triggered successfully`
+    });
+  } catch (error) {
+    logger.error(`Error processing pool ${req.params.poolId}:`, error);
+    res.status(500).json({
+      error: "Failed to process pool",
+      details: error instanceof Error ? error.message : "Unknown error"
+    });
+  }
+};
+
 export default {
   createPool,
   getAllPools,
   getPoolById,
-  updatePoolStatus
+  updatePoolStatus,
+  triggerCronJob,
+  triggerPoolProcessing
 };

@@ -81,23 +81,35 @@ class CronJobService {
 
   // Start the cron job that runs every 5 minutes
   public async startCronJob() {
-    logger.info("Starting cron job service...");
+    try {
+      logger.info("Starting cron job service...");
 
-    // Wait for wallet initialization
-    await this.waitForWalletInitialization();
+      // Wait for wallet initialization
+      await this.waitForWalletInitialization();
 
-    // Run immediately first time
-    await this.processEndedPools();
+      // Run immediately first time
+      logger.info("Running initial pool processing...");
+      await this.processEndedPools();
 
-    // Run every 5 minutes (300000 ms)
-    setInterval(
-      async () => {
-        await this.processEndedPools();
-      },
-      5 * 60 * 1000
-    );
+      // Run every 5 minutes (300000 ms)
+      setInterval(
+        async () => {
+          try {
+            logger.info("Cron job triggered - processing ended pools...");
+            await this.processEndedPools();
+            logger.info("Cron job completed successfully");
+          } catch (error) {
+            logger.error("Cron job execution failed:", error);
+          }
+        },
+        5 * 60 * 1000
+      );
 
-    logger.info("Cron job scheduled to run every 5 minutes");
+      logger.info("✅ Cron job scheduled to run every 5 minutes");
+    } catch (error) {
+      logger.error("❌ Failed to start cron job service:", error);
+      throw error;
+    }
   }
 
   // Wait for wallet initialization to complete
@@ -116,35 +128,56 @@ class CronJobService {
 
   private async processEndedPools() {
     try {
+      logger.info("🔍 Checking for ended pools...");
+      
       const client = await getClient();
       const db = client.db(process.env.DB_NAME);
       const Pools = getPoolCollection(db);
 
       const allPools = await Pools.find({}).toArray();
+      logger.info(`📊 Total pools in database: ${allPools.length}`);
       
       if (allPools.length === 0) {
+        logger.info("No pools found in database");
         return;
       }
 
       const now = new Date();
+      logger.info(`⏰ Current time: ${now.toISOString()}`);
 
-      const endedPools = allPools.filter(pool => 
-        new Date(pool.endTime) < now && pool.status !== "completed"
-      );
+      const endedPools = allPools.filter(pool => {
+        const poolEndTime = new Date(pool.endTime);
+        const isEnded = poolEndTime < now;
+        const isNotCompleted = pool.status !== "completed";
+        
+        logger.info(`Pool ${pool.poolId}: endTime=${poolEndTime.toISOString()}, isEnded=${isEnded}, status=${pool.status}, isNotCompleted=${isNotCompleted}`);
+        
+        return isEnded && isNotCompleted;
+      });
+
+      logger.info(`🎯 Found ${endedPools.length} unprocessed ended pools`);
 
       if (endedPools.length === 0) {
+        logger.info("No unprocessed ended pools found");
         return;
       }
 
-      logger.info(`Processing ${endedPools.length} unprocessed pools`);
-
       for (const pool of endedPools) {
-        await this.processPoolRewards(pool);
-        await this.sleep(5000);
+        try {
+          logger.info(`🔄 Processing pool: ${pool.poolId} (${pool.status})`);
+          await this.processPoolRewards(pool);
+          logger.info(`✅ Successfully processed pool: ${pool.poolId}`);
+          await this.sleep(5000);
+        } catch (poolError) {
+          logger.error(`❌ Failed to process pool ${pool.poolId}:`, poolError);
+          // Continue with next pool instead of stopping
+        }
       }
 
+      logger.info("🏁 Finished processing all ended pools");
     } catch (error) {
-      logger.error("Error processing ended pools:", error);
+      logger.error("❌ Error processing ended pools:", error);
+      throw error;
     }
   }
 
